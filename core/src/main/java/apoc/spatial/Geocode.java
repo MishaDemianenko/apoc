@@ -28,8 +28,10 @@ import static java.lang.System.currentTimeMillis;
 import apoc.util.JsonUtil;
 import apoc.util.Util;
 import java.util.AbstractMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.commons.configuration2.Configuration;
 import org.neo4j.graphdb.security.URLAccessChecker;
@@ -364,13 +366,19 @@ public class Geocode {
         final String provider = (String)
                 configMap.getOrDefault(GEOCODE_PROVIDER_KEY, activeConfig.getString(GEOCODE_PROVIDER_KEY, "osm"));
 
+        final Set<String> callerSuppliedKeys = new HashSet<>();
         configMap.forEach((key, value) -> {
             // we transform e.g. key `reverseUrl` to `reverse.url`, consistently to ApocConfig
             final String dotCase = key.replaceAll("[A-Z][a-z]", ".$0").toLowerCase();
             activeConfig.setProperty(provider + "." + dotCase, value);
+            callerSuppliedKeys.add(dotCase);
         });
 
-        if ((configMap.containsKey("url") || configMap.containsKey("reverseUrl")) && !configMap.containsKey("key")) {
+        // A caller-supplied url template must not be combined with the server's stored key, otherwise the
+        // secret ends up in a request to a caller-chosen host. The normalized key names are compared, so an
+        // alternative spelling of a template key (e.g. `reverse.url` instead of `reverseUrl`) cannot slip past.
+        if ((callerSuppliedKeys.contains("url") || callerSuppliedKeys.contains("reverse.url"))
+                && !callerSuppliedKeys.contains("key")) {
             activeConfig.clearProperty(provider + ".key");
         }
 

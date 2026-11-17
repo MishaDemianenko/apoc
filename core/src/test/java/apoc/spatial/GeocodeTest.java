@@ -97,6 +97,19 @@ class GeocodeTest {
     }
 
     @Test
+    void testCallerSuppliedDotCasedUrlDoesNotLeakApocConfKey() {
+        // `reverse.url` is the normalized form of `reverseUrl`, so it is the same config property and must
+        // be caught by the same guard; otherwise the admin's key is substituted into the caller's template
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "superSecretAdminKey");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.url", String.format(URL_FORMAT, "http", BLOCKED_ADDRESS));
+
+        final String attackerReverseUrl = String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS);
+
+        // the admin's key is cleared, so this fails before any request is made
+        assertGeocodeFails(true, "Missing 'key' for", map("reverse.url", attackerReverseUrl));
+    }
+
+    @Test
     void testWrongUrlButViaOtherProvider() throws Exception {
         // wrong url but doesn't fail because provider is osm, not opencage
         testGeocodeWithThrottling(
