@@ -54,7 +54,7 @@ import org.junit.jupiter.api.Test;
 import org.neo4j.graphdb.schema.ConstraintType;
 import org.neo4j.graphdb.schema.IndexType;
 
-class UtilTest {
+class UtilRedirectTest {
 
     @Test
     void handleRedirectResolvesRelativeLocationAgainstOriginalUrl() throws Exception {
