@@ -113,10 +113,8 @@ class DegreeDistributionSecurityTest {
     }
 
     private List<Map<String, Object>> degrees(LoginContext loginContext, String types) {
-        try (Transaction tx =
-                ((GraphDatabaseAPI) db).beginTransaction(KernelTransaction.Type.EXPLICIT, loginContext)) {
-            return tx.execute("CALL apoc.stats.degrees($types)", Map.of("types", types))
-                    .stream()
+        try (Transaction tx = ((GraphDatabaseAPI) db).beginTransaction(KernelTransaction.Type.EXPLICIT, loginContext)) {
+            return tx.execute("CALL apoc.stats.degrees($types)", Map.of("types", types)).stream()
                     .toList();
         }
     }
