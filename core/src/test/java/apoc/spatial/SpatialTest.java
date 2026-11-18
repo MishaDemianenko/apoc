@@ -240,8 +240,19 @@ class SpatialTest {
 
     @Test
     void testSimpleGeocodeOpencageOverwiteApocConfigs() {
+        // the key is defined in apocConfig()
         // the url and provider are in both apocConfig() and config map, but the second ones win
-        // a caller-supplied url is not trusted, so the apocConfig key is not used and the caller supplies its own
+        apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
+        final Map<String, Object> config = map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL);
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> geocodeOnceCommon(config));
+        assertTrue(e.getMessage().contains("Missing 'key' for geocode provider"));
+    }
+
+    @Test
+    void testSimpleGeocodeOpencageWithCallerSuppliedKey() {
+        // same as above, but the caller supplies its own key alongside the url, so the call succeeds
         apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
         final Map<String, Object> config =
@@ -390,8 +401,19 @@ class SpatialTest {
 
     @Test
     void testSimpleReverseGeocodeOpencageOverwiteApocConfigs() {
+        // the key is defined in apocConfig()
         // the url and provider are in both apocConfig() and config map, but the second ones win
-        // a caller-supplied url is not trusted, so the apocConfig key is not used and the caller supplies its own
+        apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
+        final Map<String, Object> config = map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL);
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> reverseGeocodeCommon(config));
+        assertTrue(e.getMessage().contains("Missing 'key' for geocode provider"));
+    }
+
+    @Test
+    void testSimpleReverseGeocodeOpencageWithCallerSuppliedKey() {
+        // same as above, but the caller supplies its own key alongside the url, so the call succeeds
         apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
         final Map<String, Object> config =

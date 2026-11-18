@@ -366,19 +366,19 @@ public class Geocode {
         final String provider = (String)
                 configMap.getOrDefault(GEOCODE_PROVIDER_KEY, activeConfig.getString(GEOCODE_PROVIDER_KEY, "osm"));
 
-        final Set<String> callerSuppliedKeys = new HashSet<>();
+        final Set<String> callerSuppliedProperties = new HashSet<>();
         configMap.forEach((key, value) -> {
             // we transform e.g. key `reverseUrl` to `reverse.url`, consistently to ApocConfig
             final String dotCase = key.replaceAll("[A-Z][a-z]", ".$0").toLowerCase();
             activeConfig.setProperty(provider + "." + dotCase, value);
-            callerSuppliedKeys.add(dotCase);
+            callerSuppliedProperties.add(dotCase);
         });
 
         // A caller-supplied url template must not be combined with the server's stored key, otherwise the
-        // secret ends up in a request to a caller-chosen host. The normalized key names are compared, so an
+        // secret ends up in a request to a caller-chosen host. The normalized property names are compared, so an
         // alternative spelling of a template key (e.g. `reverse.url` instead of `reverseUrl`) cannot slip past.
-        if ((callerSuppliedKeys.contains("url") || callerSuppliedKeys.contains("reverse.url"))
-                && !callerSuppliedKeys.contains("key")) {
+        if ((callerSuppliedProperties.contains("url") || callerSuppliedProperties.contains("reverse.url"))
+                && !callerSuppliedProperties.contains("key")) {
             activeConfig.clearProperty(provider + ".key");
         }
 
