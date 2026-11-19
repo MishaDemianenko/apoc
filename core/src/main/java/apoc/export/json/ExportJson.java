@@ -192,7 +192,9 @@ public class ExportJson {
         ExportConfig exportConfig = new ExportConfig(config);
         apocConfig.checkWriteAllowed(exportConfig, fileName, urlAccessChecker);
         final String format = "json";
-        ProgressReporter reporter = new ProgressReporter(null, null, new ExportProgressInfo(fileName, source, format));
+        ExportProgressInfo progressInfo = new ExportProgressInfo(fileName, source, format);
+        progressInfo.setBatchSize(exportConfig.getBatchSize());
+        ProgressReporter reporter = new ProgressReporter(null, null, progressInfo);
         JsonFormat exporter = new JsonFormat(db, getJsonFormat(config));
         ExportFileManager cypherFileManager = FileManagerFactory.createFileManager(fileName, false, exportConfig);
         if (exportConfig.streamStatements()) {

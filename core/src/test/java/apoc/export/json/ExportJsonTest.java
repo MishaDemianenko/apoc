@@ -230,6 +230,19 @@ class ExportJsonTest {
     }
 
     @Test
+    void testExportAllJsonStreamIsSplitIntoBatches() {
+        List<Map<String, Object>> rows = db.executeTransactionally(
+                "CALL apoc.export.json.all(null, {stream: true, batchSize: 2, useOptimizations: {type: 'none'}}) YIELD data RETURN data",
+                Map.of(),
+                result -> result.stream().toList());
+
+        assertThat(rows.size()).isGreaterThan(1);
+        String joined =
+                String.join("", rows.stream().map(r -> r.get("data").toString()).toList());
+        assertThat(joined.lines()).zipSatisfy(readResourceLines("exportJSON/all.json"), jsonEquals);
+    }
+
+    @Test
     void testExportAllJsonStreamWithFormatConfig() {
         Map.of(
                         Format.JSON_LINES.name(),
