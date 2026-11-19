@@ -51,6 +51,8 @@ class TriggerDisabledTest {
 
     @ExtensionCallback
     void configure(TestDatabaseManagementServiceBuilder builder) {
+        // Other trigger tests leave this JVM-wide property true, so force it off instead of relying on the default.
+        System.setProperty("apoc.trigger.enabled", "false");
         builder.setConfig(GraphDatabaseSettings.default_language, GraphDatabaseSettings.CypherVersion.Cypher5);
     }
 

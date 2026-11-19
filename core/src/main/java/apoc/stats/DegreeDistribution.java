@@ -35,6 +35,7 @@ import org.neo4j.graphdb.RelationshipType;
 import org.neo4j.internal.kernel.api.NodeCursor;
 import org.neo4j.internal.kernel.api.Read;
 import org.neo4j.internal.kernel.api.TokenRead;
+import org.neo4j.internal.kernel.api.security.AccessMode;
 import org.neo4j.kernel.api.KernelTransaction;
 import org.neo4j.kernel.internal.GraphDatabaseAPI;
 import org.neo4j.procedure.Context;
@@ -160,6 +161,7 @@ public class DegreeDistribution {
                 db,
                 pools.getDefaultExecutorService(),
                 BATCHSIZE,
+                tx.securityContext(),
                 nodeCursor -> stats.forEach((s) -> s.computeDegree(nodeCursor)));
         return stats.stream().map(DegreeStats::done);
     }
@@ -169,9 +171,14 @@ public class DegreeDistribution {
         TokenRead tokenRead = tx.tokenRead();
         Read read = tx.dataRead();
         if ("*".equals(types)) {
+            // the token read is not filtered by privileges, so the caller's access mode is applied here
+            AccessMode accessMode = tx.securityContext().mode();
             Iterator<NamedToken> tokens = tokenRead.relationshipTypesGetAllTokens();
             while (tokens.hasNext()) {
                 NamedToken token = tokens.next();
+                if (!accessMode.allowsTraverseRelType(token.id())) {
+                    continue;
+                }
                 long total = read.countsForRelationship(ANY_LABEL, token.id(), ANY_LABEL);
                 stats.add(new DegreeStats(token.name(), token.id(), Direction.OUTGOING, total));
                 stats.add(new DegreeStats(token.name(), token.id(), Direction.INCOMING, total));
