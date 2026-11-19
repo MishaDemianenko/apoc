@@ -245,6 +245,18 @@ class SpatialTest {
         apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
         final Map<String, Object> config = map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL);
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> geocodeOnceCommon(config));
+        assertTrue(e.getMessage().contains("Missing 'key' for geocode provider"));
+    }
+
+    @Test
+    void testSimpleGeocodeOpencageWithCallerSuppliedKey() {
+        // same as above, but the caller supplies its own key alongside the url, so the call succeeds
+        apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
+        final Map<String, Object> config =
+                map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL, "key", "myOwnMockKey");
         geocodeOnceCommon(config);
     }
 
@@ -394,6 +406,18 @@ class SpatialTest {
         apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
         final Map<String, Object> config = map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL);
+
+        RuntimeException e = assertThrows(RuntimeException.class, () -> reverseGeocodeCommon(config));
+        assertTrue(e.getMessage().contains("Missing 'key' for geocode provider"));
+    }
+
+    @Test
+    void testSimpleReverseGeocodeOpencageWithCallerSuppliedKey() {
+        // same as above, but the caller supplies its own key alongside the url, so the call succeeds
+        apocConfig().setProperty(Geocode.PREFIX + ".provider", "anotherOne");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "myOwnMockKey");
+        final Map<String, Object> config =
+                map("provider", "opencage", "url", URL, "reverseUrl", REVERSE_URL, "key", "myOwnMockKey");
         reverseGeocodeCommon(config);
     }
 

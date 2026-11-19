@@ -21,6 +21,7 @@ package apoc.spatial;
 import static apoc.ApocConfig.apocConfig;
 import static apoc.util.MapUtil.map;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -76,6 +77,39 @@ class GeocodeTest {
     }
 
     // -- with config map
+    @Test
+    void testCallerSuppliedUrlDoesNotLeakApocConfKey() {
+        // the admin's server-configured key must not be substituted into a caller-supplied url template,
+        // otherwise the secret would be delivered to a caller-chosen host. The embedded dbms runs with auth
+        // disabled, so every caller counts as an admin and the guard cannot be reached through a query here;
+        // GeocodeKeyLeakTest in the it module covers the end-to-end behaviour.
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "superSecretAdminKey");
+
+        final String url = String.format(URL_FORMAT, "http", BLOCKED_ADDRESS);
+        final String reverseUrl = String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS);
+        final Map<String, Object> conf = map("provider", "opencage", "url", url, "reverseUrl", reverseUrl);
+
+        // a caller-supplied template without a caller-supplied key loses the server key
+        assertThrows(IllegalArgumentException.class, () -> Geocode.getSupplierEntry(() -> {}, conf, false));
+
+        // an admin keeps the server key
+        assertDoesNotThrow(() -> Geocode.getSupplierEntry(() -> {}, conf, true));
+    }
+
+    @Test
+    void testCallerSuppliedDotCasedUrlDoesNotLeakApocConfKey() {
+        // `reverse.url` is the normalized form of `reverseUrl`, so it is the same config property and must
+        // be caught by the same guard; otherwise the admin's key is substituted into the caller's template
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "superSecretAdminKey");
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.url", String.format(URL_FORMAT, "http", BLOCKED_ADDRESS));
+
+        final Map<String, Object> conf =
+                map("provider", "opencage", "reverse.url", String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS));
+
+        assertThrows(IllegalArgumentException.class, () -> Geocode.getSupplierEntry(() -> {}, conf, false));
+        assertDoesNotThrow(() -> Geocode.getSupplierEntry(() -> {}, conf, true));
+    }
+
     @Test
     void testWrongUrlButViaOtherProvider() throws Exception {
         // wrong url but doesn't fail because provider is osm, not opencage
