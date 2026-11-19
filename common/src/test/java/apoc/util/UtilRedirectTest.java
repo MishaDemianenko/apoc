@@ -24,6 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.neo4j.graphdb.schema.ConstraintType.NODE_KEY;
@@ -163,8 +164,7 @@ class UtilRedirectTest {
 
     @Test
     void highRatioZipEntryIsRejectedBySizeBound() throws Exception {
-        org.junit.jupiter.api.Assumptions.assumeTrue(
-                LimitedSizeInputStream.SIZE_MULTIPLIER >= 0, "ratio protection disabled in this JVM run");
+        assumeTrue(LimitedSizeInputStream.SIZE_MULTIPLIER >= 0, "ratio protection disabled in this JVM run");
 
         // 40 MB of zeros compresses to a few tens of KB, so with the default 200x ratio budget
         // (here: 200 * zip size, well below 40 MB) reading the entry must hit the size bound
