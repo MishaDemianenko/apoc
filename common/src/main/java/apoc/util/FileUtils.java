@@ -48,6 +48,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.neo4j.graphdb.security.URLAccessChecker;
@@ -71,7 +72,19 @@ public class FileUtils {
         return urlAccessChecker.checkURL(url).getFile();
     }
 
+    private static final Pattern WINDOWS_DRIVE_PATH = Pattern.compile("^[A-Za-z]:([\\\\/].*)?$");
+
+    /**
+     * True for paths like `C:\dir\file` or `C:/dir/file`, whose drive letter would otherwise be parsed as a URL protocol.
+     */
+    public static boolean isWindowsDrivePath(String fileName) {
+        return fileName != null && WINDOWS_DRIVE_PATH.matcher(fileName.trim()).matches();
+    }
+
     public static String getFileUrl(String fileName) throws MalformedURLException {
+        if (isWindowsDrivePath(fileName)) {
+            return fileName;
+        }
         try {
             return new URL(fileName).getFile();
         } catch (MalformedURLException e) {
@@ -102,6 +115,11 @@ public class FileUtils {
             case gs:
                 return readHttpInputStream(urlAddress, headers, payload, REDIRECT_LIMIT, urlAccessChecker);
             default:
+                if (isWindowsDrivePath(urlAddress)) {
+                    String path = urlAddress.trim();
+                    urlAccessChecker.checkURL(new URL("file", "", "/" + path.replace('\\', '/')));
+                    return new StreamConnection.FileStreamConnection(path);
+                }
                 try {
                     URL url = urlAccessChecker.checkURL(URI.create(urlAddress).toURL());
                     return new StreamConnection.FileStreamConnection(url.toURI());
@@ -160,6 +178,9 @@ public class FileUtils {
     }
 
     public static SupportedProtocols from(String source) {
+        if (isWindowsDrivePath(source)) {
+            return SupportedProtocols.file;
+        }
         try {
             final URL url = new URL(source);
             return from(url);
@@ -173,12 +194,6 @@ public class FileUtils {
                 } catch (Exception ignored) {
                 }
 
-                // in case a Windows user write an url like `C:/User/...`
-                if (e.getMessage().contains("unknown protocol") && Util.isWindows()) {
-                    throw new RuntimeException(e.getMessage()
-                            + "\n Please note that for Windows absolute paths they have to be explicit by prepending `file:` or supplied without the drive, "
-                            + "\n e.g. `file:C:/my/path/file` or `/my/path/file`, instead of `C:/my/path/file`");
-                }
                 throw new RuntimeException(e);
             }
             return SupportedProtocols.file;
