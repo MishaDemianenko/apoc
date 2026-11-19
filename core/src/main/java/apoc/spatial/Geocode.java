@@ -35,6 +35,8 @@ import java.util.Set;
 import java.util.stream.Stream;
 import org.apache.commons.configuration2.Configuration;
 import org.neo4j.graphdb.security.URLAccessChecker;
+import org.neo4j.internal.kernel.api.security.AdminActionOnResource;
+import org.neo4j.internal.kernel.api.security.SecurityContext;
 import org.neo4j.procedure.*;
 
 public class Geocode {
@@ -47,6 +49,9 @@ public class Geocode {
 
     @Context
     public URLAccessChecker urlAccessChecker;
+
+    @Context
+    public SecurityContext securityContext;
 
     interface GeocodeSupplier {
         Stream<GeoCodeResult> geocode(String params, long maxResults, URLAccessChecker urlAccessChecker);
@@ -351,16 +356,33 @@ public class Geocode {
     }
 
     private GeocodeSupplier getSupplier(Map<String, Object> configMap) {
-        return getSupplier(configMap, terminationGuard);
+        return getSupplier(configMap, terminationGuard, callerIsAdmin());
+    }
+
+    private boolean callerIsAdmin() {
+        // an admin can read apoc.conf directly, so exempting them discloses nothing to them. With auth
+        // disabled there are no non-admin users, so every caller resolves to admin here.
+        return securityContext.allowsAdminAction(AdminActionOnResource.ALL).allowsAccess();
     }
 
     public static GeocodeSupplier getSupplier(Map<String, Object> configMap, TerminationGuard terminationGuard) {
-        final AbstractMap.SimpleEntry<GeocodeSupplier, String> results = getSupplierEntry(terminationGuard, configMap);
+        return getSupplier(configMap, terminationGuard, false);
+    }
+
+    public static GeocodeSupplier getSupplier(
+            Map<String, Object> configMap, TerminationGuard terminationGuard, boolean callerIsAdmin) {
+        final AbstractMap.SimpleEntry<GeocodeSupplier, String> results =
+                getSupplierEntry(terminationGuard, configMap, callerIsAdmin);
         return results.getKey();
     }
 
     public static AbstractMap.SimpleEntry<GeocodeSupplier, String> getSupplierEntry(
             TerminationGuard terminationGuard, Map<String, Object> configMap) {
+        return getSupplierEntry(terminationGuard, configMap, false);
+    }
+
+    public static AbstractMap.SimpleEntry<GeocodeSupplier, String> getSupplierEntry(
+            TerminationGuard terminationGuard, Map<String, Object> configMap, boolean callerIsAdmin) {
         Configuration activeConfig = apocConfig().getConfig().subset(PREFIX);
         // with configMap we overwrite the ApocConfig, if none of these is found, we choose the default one, 'osm'
         final String provider = (String)
@@ -377,7 +399,9 @@ public class Geocode {
         // A caller-supplied url template must not be combined with the server's stored key, otherwise the
         // secret ends up in a request to a caller-chosen host. The normalized property names are compared, so an
         // alternative spelling of a template key (e.g. `reverse.url` instead of `reverseUrl`) cannot slip past.
-        if ((callerSuppliedProperties.contains("url") || callerSuppliedProperties.contains("reverse.url"))
+        // Admins are exempt, since they can read apoc.conf anyway.
+        if (!callerIsAdmin
+                && (callerSuppliedProperties.contains("url") || callerSuppliedProperties.contains("reverse.url"))
                 && !callerSuppliedProperties.contains("key")) {
             activeConfig.clearProperty(provider + ".key");
         }

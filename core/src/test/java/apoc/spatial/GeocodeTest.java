@@ -21,6 +21,7 @@ package apoc.spatial;
 import static apoc.ApocConfig.apocConfig;
 import static apoc.util.MapUtil.map;
 import static org.awaitility.Awaitility.await;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -78,22 +79,21 @@ class GeocodeTest {
     // -- with config map
     @Test
     void testCallerSuppliedUrlDoesNotLeakApocConfKey() {
-        // the admin's server-configured key must not be substituted into a caller-supplied
-        // url template, otherwise the secret would be delivered to a caller-chosen host
-        final String adminKey = "superSecretAdminKey";
-        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", adminKey);
+        // the admin's server-configured key must not be substituted into a caller-supplied url template,
+        // otherwise the secret would be delivered to a caller-chosen host. The embedded dbms runs with auth
+        // disabled, so every caller counts as an admin and the guard cannot be reached through a query here;
+        // GeocodeKeyLeakTest in the it module covers the end-to-end behaviour.
+        apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "superSecretAdminKey");
 
         final String url = String.format(URL_FORMAT, "http", BLOCKED_ADDRESS);
         final String reverseUrl = String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS);
+        final Map<String, Object> conf = map("provider", "opencage", "url", url, "reverseUrl", reverseUrl);
 
-        // a caller-supplied template without a caller-supplied key fails,
-        // instead of sending the admin's key to the caller's host
-        assertGeocodeFails(false, "Missing 'key' for geocode provider", map("url", url, "reverseUrl", reverseUrl));
-        assertGeocodeFails(true, "Missing 'key' for geocode provider", map("url", url, "reverseUrl", reverseUrl));
+        // a caller-supplied template without a caller-supplied key loses the server key
+        assertThrows(IllegalArgumentException.class, () -> Geocode.getSupplierEntry(() -> {}, conf, false));
 
-        // with a caller-supplied key the request goes out (and fails on the blocklist)
-        assertGeocodeFails(false, BLOCKED_ERROR, map("key", "myOwnKey", "url", url, "reverseUrl", reverseUrl));
-        assertGeocodeFails(true, BLOCKED_ERROR, map("key", "myOwnKey", "url", url, "reverseUrl", reverseUrl));
+        // an admin keeps the server key
+        assertDoesNotThrow(() -> Geocode.getSupplierEntry(() -> {}, conf, true));
     }
 
     @Test
@@ -103,10 +103,11 @@ class GeocodeTest {
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.key", "superSecretAdminKey");
         apocConfig().setProperty(Geocode.PREFIX + ".opencage.url", String.format(URL_FORMAT, "http", BLOCKED_ADDRESS));
 
-        final String attackerReverseUrl = String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS);
+        final Map<String, Object> conf =
+                map("provider", "opencage", "reverse.url", String.format(REVERSE_URL_FORMAT, "http", BLOCKED_ADDRESS));
 
-        // the admin's key is cleared, so this fails before any request is made
-        assertGeocodeFails(true, "Missing 'key' for", map("reverse.url", attackerReverseUrl));
+        assertThrows(IllegalArgumentException.class, () -> Geocode.getSupplierEntry(() -> {}, conf, false));
+        assertDoesNotThrow(() -> Geocode.getSupplierEntry(() -> {}, conf, true));
     }
 
     @Test
