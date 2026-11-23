@@ -25,7 +25,9 @@ import apoc.util.JsonUtil;
 import java.io.Reader;
 import java.lang.reflect.Array;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -219,6 +221,17 @@ public class XmlGraphMLReader {
         }
     }
 
+    private static class PendingEdge {
+        final StartElement element;
+        final RelationshipType type;
+        final Map<String, Object> properties = new LinkedHashMap<>();
+
+        PendingEdge(StartElement element, RelationshipType type) {
+            this.element = element;
+            this.type = type;
+        }
+    }
+
     public static final QName ID = QName.valueOf("id");
     public static final QName LABELS = QName.valueOf("labels");
     public static final QName LABEL = QName.valueOf("label");
@@ -241,6 +254,8 @@ public class XmlGraphMLReader {
         inputFactory.setProperty(XMLInputFactory.IS_SUPPORTING_EXTERNAL_ENTITIES, false);
         XMLEventReader reader = inputFactory.createXMLEventReader(input);
         Entity last = null;
+        PendingEdge pending = null;
+        List<PendingEdge> pendingEdges = new ArrayList<>();
         Map<String, Key> nodeKeys = new HashMap<>();
         Map<String, Key> relKeys = new HashMap<>();
         int count = 0;
@@ -305,9 +320,9 @@ public class XmlGraphMLReader {
                         continue;
                     }
                     if (name.equals("data")) {
-                        if (last == null) continue;
+                        if (last == null && pending == null) continue;
                         String id = getAttribute(element, KEY);
-                        boolean isNode = last instanceof Node;
+                        boolean isNode = pending == null && last instanceof Node;
                         Key key = isNode ? nodeKeys.get(id) : relKeys.get(id);
                         if (key == null) key = Key.defaultKey(id, isNode);
                         final Map.Entry<XMLEvent, Object> eventEntry = getDataEventEntry(reader, key, terminationGuard);
@@ -317,12 +332,12 @@ public class XmlGraphMLReader {
                             if (this.labels && isNode && id.equals("labels")) {
                                 addLabels((Node) last, value.toString());
                             } else if (!this.labels || isNode || !id.equals("label")) {
-                                last.setProperty(key.nameOrId, value);
+                                setProperty(last, pending, key.nameOrId, value);
                                 if (reporter != null) reporter.update(0, 0, 1);
                             }
                         } else if (next.getEventType() == XMLStreamConstants.END_ELEMENT) {
-                            last.setProperty(key.nameOrId, StringUtils.EMPTY);
-                            reporter.update(0, 0, 1);
+                            setProperty(last, pending, key.nameOrId, StringUtils.EMPTY);
+                            if (reporter != null) reporter.update(0, 0, 1);
                         }
                         continue;
                     }
@@ -337,6 +352,7 @@ public class XmlGraphMLReader {
                         if (storeNodeIds) node.setProperty("id", id);
                         setDefaults(nodeKeys, node);
                         last = node;
+                        pending = null;
                         cache.put(id, node.getElementId());
                         if (reporter != null) reporter.update(1, 0, 0);
                         count++;
@@ -350,13 +366,38 @@ public class XmlGraphMLReader {
 
                         RelationshipType relationshipType =
                                 label == null ? getRelationshipType(reader) : RelationshipType.withName(label);
+                        if (from == null || to == null) {
+                            // an endpoint may be defined later in the file, so resolve this edge once all nodes are
+                            // read
+                            pending = new PendingEdge(element, relationshipType);
+                            last = null;
+                            setDefaults(relKeys, pending.properties);
+                            pendingEdges.add(pending);
+                            continue;
+                        }
                         Relationship relationship = from.createRelationshipTo(to, relationshipType);
                         setDefaults(relKeys, relationship);
                         last = relationship;
+                        pending = null;
                         if (reporter != null) reporter.update(0, 1, 0);
                         count++;
                     }
                 }
+            }
+            for (PendingEdge edge : pendingEdges) {
+                terminationGuard.check();
+                Node from = requireNode(
+                        getByNodeId(cache, tx.getTransaction(), edge.element, XmlNodeExport.NodeType.SOURCE),
+                        edge.element,
+                        XmlNodeExport.NodeType.SOURCE);
+                Node to = requireNode(
+                        getByNodeId(cache, tx.getTransaction(), edge.element, XmlNodeExport.NodeType.TARGET),
+                        edge.element,
+                        XmlNodeExport.NodeType.TARGET);
+                Relationship relationship = from.createRelationshipTo(to, edge.type);
+                edge.properties.forEach(relationship::setProperty);
+                if (reporter != null) reporter.update(0, 1, 0);
+                count++;
             }
             tx.doCommit();
         } catch (Exception e) {
@@ -437,11 +478,7 @@ public class XmlGraphMLReader {
         final String id = cache.get(sourceTargetValue);
         // without source/target config, we look for the internal id
         if (StringUtils.isBlank(nodeConfig.label)) {
-            if (id == null) {
-                throw new RuntimeException("The node with the given id: " + sourceTargetValue
-                        + " was not found. Check that it is defined before the referencing relationship.");
-            }
-            return tx.getNodeByElementId(id);
+            return id == null ? null : tx.getNodeByElementId(id);
         }
         // with source/target configured, we search a node with a specified label
         // and with a type specified in sourceType, if present, or string by default
@@ -453,6 +490,28 @@ public class XmlGraphMLReader {
                 Label.label(nodeConfig.label),
                 Optional.ofNullable(nodeConfig.id).orElse("id"),
                 value);
+    }
+
+    private Node requireNode(Node node, StartElement element, XmlNodeExport.NodeType nodeType) {
+        if (node == null) {
+            throw new RuntimeException("The node with the given id: "
+                    + getAttribute(element, QName.valueOf(nodeType.getName())) + " was not found.");
+        }
+        return node;
+    }
+
+    private void setProperty(Entity entity, PendingEdge pending, String name, Object value) {
+        if (pending != null) {
+            pending.properties.put(name, value);
+        } else {
+            entity.setProperty(name, value);
+        }
+    }
+
+    private void setDefaults(Map<String, Key> keys, Map<String, Object> properties) {
+        for (Key key : keys.values()) {
+            if (key.defaultValue != null) properties.put(key.nameOrId, key.defaultValue);
+        }
     }
 
     private RelationshipType getRelationshipType(XMLEventReader reader) throws XMLStreamException {

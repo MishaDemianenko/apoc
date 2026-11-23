@@ -230,14 +230,121 @@ class ExportGraphMLTest {
         fw.write(xml);
         fw.close();
 
+        TestUtil.testCall(db, "CALL apoc.import.graphml($file,{})", map("file", output.getAbsolutePath()), r -> {
+            assertEquals(3L, r.get("nodes"));
+            assertEquals(1L, r.get("relationships"));
+        });
+        TestUtil.testCall(
+                db,
+                "MATCH (a {d19: '14'})-[r:RELATED]->(b {d21: 'Example Domain'}) RETURN r.d8 AS d8, r.d23 AS d23, r.d25 AS d25",
+                r -> {
+                    assertEquals("structure", r.get("d8"));
+                    assertEquals("183", r.get("d23"));
+                    assertEquals("60574", r.get("d25"));
+                });
+    }
+
+    @Test
+    void testRelsBothBeforeAndAfterNodes() throws Exception {
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+
+        String xml =
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+                  <key id="w" for="edge" attr.name="weight" attr.type="int"/>
+                  <graph id="G" edgedefault="directed">
+                    <edge id="e1" source="a" target="b" label="BEFORE"><data key="w">5</data></edge>
+                    <node id="a"/>
+                    <node id="b"/>
+                    <edge id="e2" source="a" target="b" label="AFTER"><data key="w">9</data></edge>
+                    <edge id="e3" source="b" target="c" label="HALF"><data key="w">1</data></edge>
+                    <node id="c"/>
+                  </graph>
+                </graphml>
+                """;
+        File output = new File(directory, "import.graphml");
+        try (FileWriter fw = new FileWriter(output)) {
+            fw.write(xml);
+        }
+
+        TestUtil.testCall(db, "CALL apoc.import.graphml($file,{})", map("file", output.getAbsolutePath()), r -> {
+            assertEquals(3L, r.get("nodes"));
+            assertEquals(3L, r.get("relationships"));
+        });
+        TestUtil.testResult(db, "MATCH ()-[r]->() RETURN type(r) AS type, r.weight AS weight ORDER BY type", result -> {
+            Map<String, Map<String, Object>> byType = new java.util.HashMap<>();
+            result.forEachRemaining(row -> byType.put((String) row.get("type"), row));
+            assertEquals(3, byType.size());
+            assertEquals(5, ((Number) byType.get("BEFORE").get("weight")).intValue());
+            assertEquals(9, ((Number) byType.get("AFTER").get("weight")).intValue());
+            assertEquals(1, ((Number) byType.get("HALF").get("weight")).intValue());
+        });
+    }
+
+    @Test
+    void testRelBeforeNodesWithSourceTargetConfig() throws Exception {
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+
+        String xml =
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+                  <key id="name" for="node" attr.name="name" attr.type="string"/>
+                  <key id="since" for="edge" attr.name="since" attr.type="int"/>
+                  <graph id="G" edgedefault="directed">
+                    <edge id="e1" source="zzz" target="aaa" label="KNOWS"><data key="since">2020</data></edge>
+                    <node id="n1" labels=":Foo"><data key="name">zzz</data></node>
+                    <node id="n2" labels=":Bar"><data key="name">aaa</data></node>
+                  </graph>
+                </graphml>
+                """;
+        File output = new File(directory, "import.graphml");
+        try (FileWriter fw = new FileWriter(output)) {
+            fw.write(xml);
+        }
+
+        Map<String, Object> config = map(
+                "readLabels",
+                true,
+                "source",
+                map("label", "Foo", "id", "name"),
+                "target",
+                map("label", "Bar", "id", "name"));
+        TestUtil.testCall(
+                db,
+                "CALL apoc.import.graphml($file, $config)",
+                map("file", output.getAbsolutePath(), "config", config),
+                r -> assertEquals(1L, r.get("relationships")));
+        TestUtil.testCall(
+                db,
+                "MATCH (:Foo {name: 'zzz'})-[r:KNOWS]->(:Bar {name: 'aaa'}) RETURN r.since AS since",
+                r -> assertEquals(2020, ((Number) r.get("since")).intValue()));
+    }
+
+    @Test
+    void testRelReferencingMissingNodeFails() throws Exception {
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+
+        String xml =
+                """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
+                  <edge id="e1" source="n1" target="n2"/>
+                  <node id="n1"/>
+                </graphml>
+                """;
+
+        File output = new File(directory, "import.graphml");
+        try (FileWriter fw = new FileWriter(output)) {
+            fw.write(xml);
+        }
+
         RuntimeException e = assertThrows(
                 RuntimeException.class,
                 () -> TestUtil.testCall(
                         db, "CALL apoc.import.graphml($file,{})", map("file", output.getAbsolutePath()), r -> {}));
-
-        String expectedMessage =
-                "The node with the given id: n27 was not found. Check that it is defined before the referencing relationship.";
-        Assertions.assertThat(e.getMessage()).contains(expectedMessage);
+        Assertions.assertThat(e.getMessage()).contains("The node with the given id: n2 was not found.");
     }
 
     @Test
