@@ -58,19 +58,19 @@ class FingerprintingTest {
     @Test
     void fingerprintScalars() {
 
-        String hashOfAString = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprint('some string');");
+        String hashOfAString = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprint('some string');");
         assertEquals("5AC749FBEEC93607FC28D666BE85E73A", hashOfAString);
 
-        String hashOfALong = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprint(123);");
+        String hashOfALong = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprint(123);");
         assertEquals("202CB962AC59075B964B07152D234B70", hashOfALong);
 
-        String hashOfADouble = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprint(123.456);");
+        String hashOfADouble = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprint(123.456);");
         assertEquals("B316DF1D65EE42FF51A5393DF1F86105", hashOfADouble);
 
-        String hashOfABoolean = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprint(true);");
+        String hashOfABoolean = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprint(true);");
         assertEquals("B326B5062B2F0E69046810717534CB09", hashOfABoolean);
 
-        String hashOfNull = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprint(null);");
+        String hashOfNull = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprint(null);");
         assertEquals("D41D8CD98F00B204E9800998ECF8427E", hashOfNull);
     }
 
@@ -78,7 +78,7 @@ class FingerprintingTest {
     void fingerprintMap() {
         Map<String, Object> params = map("string", "some string", "boolean", true, "long", 123l, "double", 1234.456d);
         String hashOfAMap = TestUtil.singleResultFirstColumn(
-                db, "return apoc.hashing.fingerprint($map);", singletonMap("map", params));
+                db, "RETURN apoc.hashing.fingerprint($map);", singletonMap("map", params));
         assertEquals("040B354004871F76A693DEC2E5DD8F51", hashOfAMap);
     }
 
@@ -115,13 +115,54 @@ class FingerprintingTest {
     @Test
     void fingerprintGraphShouldNotFailWithEqualsNodes() {
         db.executeTransactionally("CREATE (:Person{name:'ABC'}), (:Person{name:'ABC'})");
-        String valueAfter = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprintGraph()");
+        String valueAfter = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprintGraph()");
         db.executeTransactionally("CREATE (:Person{name:'ABC'}), (:Person{name:'ABC'})");
-        String valueBefore = TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprintGraph()");
+        String valueBefore = TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprintGraph()");
         assertNotEquals(valueAfter, valueBefore);
         String valueWithExclude =
-                TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprintGraph(['name'])");
+                TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprintGraph(['name'])");
         assertNotEquals(valueAfter, valueWithExclude);
+    }
+
+    @Test
+    void fingerprintGraphShouldNotDependOnCreationOrderOfIdenticalNodes() {
+        String inOrder =
+                """
+                CREATE (t1:Thing), (t2:Thing), (t3:Thing), (t4:Thing),
+                  (t1)-[:IS_RELATED_TO]->(t2), (t2)-[:IS_RELATED_TO]->(t3), (t3)-[:IS_RELATED_TO]->(t4)""";
+        String shuffled =
+                """
+                CREATE (t4:Thing), (t1:Thing), (t3:Thing), (t2:Thing),
+                  (t1)-[:IS_RELATED_TO]->(t2), (t2)-[:IS_RELATED_TO]->(t3), (t3)-[:IS_RELATED_TO]->(t4)""";
+
+        String query = "RETURN apoc.hashing.fingerprintGraph() AS hash";
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally(inOrder);
+        String first = TestUtil.singleResultFirstColumn(db, query);
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally(shuffled);
+        String second = TestUtil.singleResultFirstColumn(db, query);
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+
+        assertEquals(first, second);
+    }
+
+    @Test
+    void fingerprintGraphShouldDistinguishPositionInChainOfIdenticalNodes() {
+        String query = "RETURN apoc.hashing.fingerprintGraph() AS hash";
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally("CREATE (:T)-[:R]->(:T)-[:R]->(:T)-[:R]->(:T), (:T)");
+        String isolatedAtEnd = TestUtil.singleResultFirstColumn(db, query);
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally("CREATE (:T)-[:R]->(:T), (:T)-[:R]->(:T)-[:R]->(:T)");
+        String splitChain = TestUtil.singleResultFirstColumn(db, query);
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+        db.executeTransactionally("CREATE (:T)<-[:R]-(:T)-[:R]->(:T)-[:R]->(:T), (:T)");
+        String differentDirections = TestUtil.singleResultFirstColumn(db, query);
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
+
+        assertNotEquals(isolatedAtEnd, splitChain);
+        assertNotEquals(isolatedAtEnd, differentDirections);
     }
 
     @Test
@@ -137,12 +178,12 @@ class FingerprintingTest {
 
         TestUtil.testCall(
                 db,
-                "MATCH (n:NodeTest) RETURN apoc.hashing.fingerprinting(n) as hash",
+                "MATCH (n:NodeTest) RETURN apoc.hashing.fingerprinting(n) AS hash",
                 r -> assertEquals("D41D8CD98F00B204E9800998ECF8427E", r.get("hash")));
 
         TestUtil.testCall(
                 db,
-                "MATCH (n:NodeTest) RETURN apoc.hashing.fingerprint(n) as hash",
+                "MATCH (n:NodeTest) RETURN apoc.hashing.fingerprint(n) AS hash",
                 r -> assertEquals("3F8674B1C91F6D033C7183DB8F90936F", r.get("hash")));
     }
 
@@ -152,22 +193,22 @@ class FingerprintingTest {
                 "CREATE (:Person{name:'Andrea',emails:['aa@bb.de', 'cc@dd.ee'], integers:[1,2,3], floats:[0.9,1.1]})");
         String all = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (p:Person) return apoc.hashing.fingerprinting(p, $conf) as hash",
+                "MATCH (p:Person) RETURN apoc.hashing.fingerprinting(p, $conf) AS hash",
                 Collections.singletonMap("conf", Collections.emptyMap()));
         String emails = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (p:Person) return apoc.hashing.fingerprinting(p, $conf) as hash",
+                "MATCH (p:Person) RETURN apoc.hashing.fingerprinting(p, $conf) AS hash",
                 Collections.singletonMap(
                         "conf", Util.map("nodeAllowMap", Util.map("Person", Collections.singletonList("emails")))));
         String emailsByDisallowMap = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (p:Person) return apoc.hashing.fingerprinting(p, $conf) as hash",
+                "MATCH (p:Person) RETURN apoc.hashing.fingerprinting(p, $conf) AS hash",
                 Collections.singletonMap(
                         "conf",
                         Util.map("nodeDisallowMap", Util.map("Person", Arrays.asList("name", "integers", "floats")))));
         String floats = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (p:Person) return apoc.hashing.fingerprinting(p, $conf) as hash",
+                "MATCH (p:Person) RETURN apoc.hashing.fingerprinting(p, $conf) AS hash",
                 Collections.singletonMap(
                         "conf",
                         Util.map("nodeDisallowMap", Util.map("Person", Arrays.asList("name", "emails", "integers")))));
@@ -177,20 +218,22 @@ class FingerprintingTest {
 
     @Test
     void testFingerprintingRelConf() {
-        db.executeTransactionally("CREATE (p1:Person{name:'Andrea'}), (p2:Person{name:'Stefan'}), "
-                + "(p1)-[:KNOWS{since: 2014, where: 'Stackoverflow'}]->(p2)");
+        db.executeTransactionally(
+                """
+                CREATE (p1:Person{name:'Andrea'}), (p2:Person{name:'Stefan'}),
+                (p1)-[:KNOWS{since: 2014, where: 'Stackoverflow'}]->(p2)""");
         String all = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) as hash",
+                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) AS hash",
                 Collections.singletonMap("conf", Collections.emptyMap()));
         String since = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) as hash",
+                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) AS hash",
                 Collections.singletonMap(
                         "conf", Util.map("relAllowMap", Util.map("KNOWS", Collections.singletonList("since")))));
         String where = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) as hash",
+                "MATCH (n)-[r]->(m) RETURN apoc.hashing.fingerprinting(r, $conf) AS hash",
                 Collections.singletonMap(
                         "conf", Util.map("relDisallowMap", Util.map("KNOWS", Arrays.asList("since")))));
         Set<String> hashes = new HashSet<>(Arrays.asList(all, since, where));
@@ -200,38 +243,43 @@ class FingerprintingTest {
     @Test
     void testFingerprintingMapConf() {
         db.executeTransactionally(
-                "CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}), "
-                        + "(pr:Product{sku: 'Nintendo Switch'}), "
-                        + "(p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1), "
-                        + "(p1)-[:BOUGHT{when: 2017}]->(pr)");
+                """
+                        CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
+                        (pr:Product{sku: 'Nintendo Switch'}),
+                        (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
+                        (p1)-[:BOUGHT{when: 2017}]->(pr)""");
         String all = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH p = (n)-[r]->(m) " + "WITH collect(p) AS paths "
-                        + "CALL apoc.graph.fromPaths(paths, '', {}) yield graph AS g "
-                        + "WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map "
-                        + "RETURN apoc.hashing.fingerprinting(map, $conf) as hash ",
+                """
+                        MATCH p = (n)-[r]->(m) WITH collect(p) AS paths
+                        CALL apoc.graph.fromPaths(paths, '', {}) YIELD graph AS g
+                        WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map
+                        RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""",
                 Collections.singletonMap("conf", Collections.emptyMap()));
     }
 
     @Test
     void testFingerprintingWithLazyEvaluation() {
         db.executeTransactionally(
-                "CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}), "
-                        + "(pr:Product{sku: 'Nintendo Switch'}), "
-                        + "(p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1), "
-                        + "(p1)-[:BOUGHT{when: 2017}]->(pr)");
+                """
+                        CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
+                        (pr:Product{sku: 'Nintendo Switch'}),
+                        (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
+                        (p1)-[:BOUGHT{when: 2017}]->(pr)""");
         String all = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH p = (n)-[r]->(m) " + "WITH collect(p) AS paths "
-                        + "CALL apoc.graph.fromPaths(paths, '', {}) yield graph AS g "
-                        + "WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map "
-                        + "RETURN apoc.hashing.fingerprinting(map, $conf) as hash ",
+                """
+                        MATCH p = (n)-[r]->(m) WITH collect(p) AS paths
+                        CALL apoc.graph.fromPaths(paths, '', {}) YIELD graph AS g
+                        WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map
+                        RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""",
                 Collections.singletonMap(
                         "conf", Util.map("nodeAllowMap", Util.map("Person", Collections.singletonList("name")))));
         String filtered = TestUtil.singleResultFirstColumn(
                 db,
-                "MATCH (p:Person) "
-                        + "RETURN apoc.hashing.fingerprinting({nodes: collect(p), rels: []}, $conf) as hash ",
+                """
+                        MATCH (p:Person)
+                        RETURN apoc.hashing.fingerprinting({nodes: collect(p), rels: []}, $conf) AS hash""",
                 Collections.singletonMap(
                         "conf", Util.map("nodeAllowMap", Util.map("Person", Collections.singletonList("name")))));
         assertEquals(all, filtered);
@@ -240,10 +288,11 @@ class FingerprintingTest {
     @Test
     void testConfigExceptionOnTheSameLabels() {
         db.executeTransactionally(
-                "CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}), "
-                        + "(pr:Product{sku: 'Nintendo Switch'}), "
-                        + "(p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1), "
-                        + "(p1)-[:BOUGHT{when: 2017}]->(pr)");
+                """
+                        CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
+                        (pr:Product{sku: 'Nintendo Switch'}),
+                        (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
+                        (p1)-[:BOUGHT{when: 2017}]->(pr)""");
         final Map<String, Object> conf = Util.map(
                 "nodeAllowMap",
                 Util.map("Person", Arrays.asList("name")),
@@ -254,10 +303,11 @@ class FingerprintingTest {
                 QueryExecutionException.class,
                 () -> TestUtil.singleResultFirstColumn(
                         db,
-                        "MATCH p = (n)-[r]->(m) " + "WITH collect(p) AS paths "
-                                + "CALL apoc.graph.fromPaths(paths, '', {}) yield graph AS g "
-                                + "WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map "
-                                + "RETURN apoc.hashing.fingerprinting(map, $conf) as hash ",
+                        """
+                                MATCH p = (n)-[r]->(m) WITH collect(p) AS paths
+                                CALL apoc.graph.fromPaths(paths, '', {}) YIELD graph AS g
+                                WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map
+                                RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""",
                         Collections.singletonMap("conf", conf)));
 
         String expected = "You can't set the same labels for allow and disallow lists for nodes";
@@ -269,12 +319,12 @@ class FingerprintingTest {
 
         db.executeTransactionally(cypher);
         String value =
-                TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprintGraph($excludes) as hash", params);
+                TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprintGraph($excludes) AS hash", params);
 
-        db.executeTransactionally("match (n) detach delete n");
+        db.executeTransactionally("MATCH (n) DETACH DELETE n");
         db.executeTransactionally(cypher);
         String value2 =
-                TestUtil.singleResultFirstColumn(db, "return apoc.hashing.fingerprintGraph($excludes) as hash", params);
+                TestUtil.singleResultFirstColumn(db, "RETURN apoc.hashing.fingerprintGraph($excludes) AS hash", params);
 
         if (shouldBeEqual) {
             assertEquals(value, value2);

@@ -24,13 +24,13 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.Entity;
 import org.neo4j.graphdb.Label;
 import org.neo4j.graphdb.Node;
@@ -174,97 +174,69 @@ public class Fingerprinting {
                 "strategy",
                 FingerprintingConfig.FingerprintStrategy.EAGER.toString()));
         return withMessageDigest(config, messageDigest -> {
-            // step 1: load all nodes, calc their hash and map them to id
-            Map<Long, String> idToNodeHash;
+            Map<Long, String> colours = new HashMap<>();
             try (ResourceIterable<Node> allNodes = tx.getAllNodes()) {
-                idToNodeHash = allNodes.stream()
-                        .collect(Collectors.toMap(
-                                Node::getId,
-                                node -> fingerprint(node, config),
-                                (aLong, aLong2) -> {
-                                    throw new RuntimeException();
-                                },
-                                () -> new TreeMap<>()));
+                allNodes.forEach(node -> colours.put(node.getId(), fingerprint(node, config)));
             }
 
-            // step 2: build inverse map
-            final Map<String, List<Long>> nodeHashToId = idToNodeHash.entrySet().stream()
-                    .collect(Collectors.groupingBy(
-                            Map.Entry::getValue,
-                            TreeMap::new,
-                            Collectors.mapping(Map.Entry::getKey, Collectors.toList())));
+            // Relationship hashes are independent of node ids, so compute them once.
+            List<HashedRelationship> relationships = new ArrayList<>();
+            try (ResourceIterable<Relationship> allRels = tx.getAllRelationships()) {
+                allRels.forEach(rel -> relationships.add(
+                        new HashedRelationship(rel.getStartNodeId(), rel.getEndNodeId(), fingerprint(rel, config))));
+            }
 
-            // step 3: iterate nodes in order of their hash (we cannot rely on internal ids)
-            nodeHashToId.forEach((hash, ids) -> ids.forEach(id -> {
-                messageDigest.update(hash.getBytes());
-                Node node = tx.getNodeById(id);
-                List<EndNodeRelationshipHashTuple> endNodeRelationshipHashTuples;
-                try (ResourceIterable<Relationship> nodeRels = node.getRelationships(Direction.OUTGOING)) {
-                    endNodeRelationshipHashTuples = StreamSupport.stream(nodeRels.spliterator(), false)
-                            .map(relationship -> {
-                                String endNodeHash = idToNodeHash.get(relationship.getEndNodeId());
-                                String relationshipHash = fingerprint(relationship, excludedPropertyKeys);
-                                return new EndNodeRelationshipHashTuple(endNodeHash, relationshipHash);
-                            })
-                            .collect(Collectors.toList());
+            // Colour refinement: a node's colour is repeatedly combined with the sorted colours of its
+            // neighbours, so it ends up describing its position in the graph without relying on internal ids.
+            MessageDigest roundDigest = newDigest(config);
+            int distinct = new HashSet<>(colours.values()).size();
+            for (int round = 0; round < colours.size(); round++) {
+                Map<Long, List<String>> neighbourhoods = new HashMap<>();
+                for (HashedRelationship rel : relationships) {
+                    neighbourhoods
+                            .computeIfAbsent(rel.startId(), k -> new ArrayList<>())
+                            .add("OUT:" + rel.hash() + ":" + colours.get(rel.endId()));
+                    neighbourhoods
+                            .computeIfAbsent(rel.endId(), k -> new ArrayList<>())
+                            .add("IN:" + rel.hash() + ":" + colours.get(rel.startId()));
                 }
-
-                endNodeRelationshipHashTuples.stream().sorted().forEach(endNodeRelationshipHashTuple -> {
-                    messageDigest.update(
-                            endNodeRelationshipHashTuple.getEndNodeHash().getBytes());
-                    messageDigest.update(
-                            endNodeRelationshipHashTuple.getRelationshipHash().getBytes());
+                Map<Long, String> refined = new HashMap<>();
+                colours.forEach((id, colour) -> {
+                    List<String> neighbourhood =
+                            new ArrayList<>(neighbourhoods.getOrDefault(id, Collections.emptyList()));
+                    Collections.sort(neighbourhood);
+                    refined.put(id, hashOf(roundDigest, colour, neighbourhood));
                 });
-            }));
+                colours.putAll(refined);
+
+                int refinedDistinct = new HashSet<>(colours.values()).size();
+                if (refinedDistinct == distinct) {
+                    break;
+                }
+                distinct = refinedDistinct;
+            }
+
+            colours.values().stream().sorted().forEach(colour -> messageDigest.update(colour.getBytes()));
         });
     }
 
-    private static class EndNodeRelationshipHashTuple implements Comparable {
-        private final String endNodeHash;
-        private final String relationshipHash;
+    private record HashedRelationship(long startId, long endId, String hash) {}
 
-        public EndNodeRelationshipHashTuple(String endNodeHash, String relationshipHash) {
-            this.endNodeHash = endNodeHash;
-            this.relationshipHash = relationshipHash;
+    private static MessageDigest newDigest(FingerprintingConfig config) {
+        try {
+            return MessageDigest.getInstance(config.getDigestAlgorithm());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
         }
+    }
 
-        @Override
-        public int compareTo(Object o) {
-            EndNodeRelationshipHashTuple other = (EndNodeRelationshipHashTuple) o;
-            int res = endNodeHash.compareTo(other.endNodeHash);
-            if (res == 0) {
-                res = relationshipHash.compareTo(other.relationshipHash);
-            }
-            return res;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            EndNodeRelationshipHashTuple that = (EndNodeRelationshipHashTuple) o;
-
-            if (endNodeHash != null ? !endNodeHash.equals(that.endNodeHash) : that.endNodeHash != null) return false;
-            return relationshipHash != null
-                    ? relationshipHash.equals(that.relationshipHash)
-                    : that.relationshipHash == null;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = endNodeHash != null ? endNodeHash.hashCode() : 0;
-            result = 31 * result + (relationshipHash != null ? relationshipHash.hashCode() : 0);
-            return result;
-        }
-
-        public String getEndNodeHash() {
-            return endNodeHash;
-        }
-
-        public String getRelationshipHash() {
-            return relationshipHash;
-        }
+    private String hashOf(MessageDigest md, String colour, List<String> neighbourhood) {
+        md.update(colour.getBytes());
+        neighbourhood.forEach(entry -> {
+            md.update((byte) '|');
+            md.update(entry.getBytes());
+        });
+        return renderAsHex(md.digest());
     }
 
     private void fingerprintNode(DiagnosingMessageDigestDecorator md, Node node, FingerprintingConfig config) {
