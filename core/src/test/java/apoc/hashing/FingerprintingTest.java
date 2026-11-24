@@ -126,12 +126,10 @@ class FingerprintingTest {
 
     @Test
     void fingerprintGraphShouldNotDependOnCreationOrderOfIdenticalNodes() {
-        String inOrder =
-                """
+        String inOrder = """
                 CREATE (t1:Thing), (t2:Thing), (t3:Thing), (t4:Thing),
                   (t1)-[:IS_RELATED_TO]->(t2), (t2)-[:IS_RELATED_TO]->(t3), (t3)-[:IS_RELATED_TO]->(t4)""";
-        String shuffled =
-                """
+        String shuffled = """
                 CREATE (t4:Thing), (t1:Thing), (t3:Thing), (t2:Thing),
                   (t1)-[:IS_RELATED_TO]->(t2), (t2)-[:IS_RELATED_TO]->(t3), (t3)-[:IS_RELATED_TO]->(t4)""";
 
@@ -218,8 +216,7 @@ class FingerprintingTest {
 
     @Test
     void testFingerprintingRelConf() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (p1:Person{name:'Andrea'}), (p2:Person{name:'Stefan'}),
                 (p1)-[:KNOWS{since: 2014, where: 'Stackoverflow'}]->(p2)""");
         String all = TestUtil.singleResultFirstColumn(
@@ -242,26 +239,22 @@ class FingerprintingTest {
 
     @Test
     void testFingerprintingMapConf() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                         CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
                         (pr:Product{sku: 'Nintendo Switch'}),
                         (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
                         (p1)-[:BOUGHT{when: 2017}]->(pr)""");
-        String all = TestUtil.singleResultFirstColumn(
-                db,
-                """
+        String all =
+                TestUtil.singleResultFirstColumn(db, """
                         MATCH p = (n)-[r]->(m) WITH collect(p) AS paths
                         CALL apoc.graph.fromPaths(paths, '', {}) YIELD graph AS g
                         WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map
-                        RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""",
-                Collections.singletonMap("conf", Collections.emptyMap()));
+                        RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""", Collections.singletonMap("conf", Collections.emptyMap()));
     }
 
     @Test
     void testFingerprintingWithLazyEvaluation() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                         CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
                         (pr:Product{sku: 'Nintendo Switch'}),
                         (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
@@ -287,8 +280,7 @@ class FingerprintingTest {
 
     @Test
     void testConfigExceptionOnTheSameLabels() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                         CREATE (p1:Person{name:'Andrea', surname:'Santurbano'}), (p2:Person{name:'Stefan', surname:'Armbruster'}),
                         (pr:Product{sku: 'Nintendo Switch'}),
                         (p1)-[:KNOWS{since: 2014}]->(p2), (p2)-[:KNOWS{since: 2018}]->(p1),
@@ -301,14 +293,11 @@ class FingerprintingTest {
 
         QueryExecutionException e = assertThrows(
                 QueryExecutionException.class,
-                () -> TestUtil.singleResultFirstColumn(
-                        db,
-                        """
+                () -> TestUtil.singleResultFirstColumn(db, """
                                 MATCH p = (n)-[r]->(m) WITH collect(p) AS paths
                                 CALL apoc.graph.fromPaths(paths, '', {}) YIELD graph AS g
                                 WITH {nodes: apoc.coll.toSet(g.nodes), rels: apoc.coll.toSet(g.relationships)} AS map
-                                RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""",
-                        Collections.singletonMap("conf", conf)));
+                                RETURN apoc.hashing.fingerprinting(map, $conf) AS hash""", Collections.singletonMap("conf", conf)));
 
         String expected = "You can't set the same labels for allow and disallow lists for nodes";
         assertEquals(expected, ExceptionUtils.getRootCause(e).getMessage());

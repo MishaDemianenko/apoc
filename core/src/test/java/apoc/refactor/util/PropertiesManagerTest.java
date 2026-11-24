@@ -43,8 +43,7 @@ class PropertiesManagerTest {
     @Inject
     GraphDatabaseService db;
 
-    private final String QUERY =
-            """
+    private final String QUERY = """
             MATCH (d:Person {name:'Daniele'})
             MATCH (p:Country {name:'USA'})
             MATCH (d)-[r:TRAVELS_TO]->(p)
@@ -58,9 +57,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetArrayValuesSourceSingleValuesSameType() {
-        TestUtil.singleResultFirstColumn(
-                db,
-                """
+        TestUtil.singleResultFirstColumn(db, """
                         Create (d:Person {name:'Daniele'})
                         Create (p:Country {name:'USA'})
                         Create (d)-[:TRAVELS_TO {year:[2010,2015], reason:"work"}]->(p)
@@ -81,9 +78,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetSingleValueSourceArrayValuesSameType() {
-        TestUtil.singleResultFirstColumn(
-                db,
-                """
+        TestUtil.singleResultFirstColumn(db, """
                         Create (d:Person {name:'Daniele'})
                         Create (p:Country {name:'USA'})
                         Create (d)-[:TRAVELS_TO {year:1995, reason:"work"}]->(p)
@@ -104,8 +99,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetArrayValueSourceArrayValuesSameType() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:[1995,2014], reason:"work"}]->(p)
@@ -126,8 +120,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetArrayValuesSourceSingleValuesDifferentType() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:[2010,2015], reason:"work"}]->(p)
@@ -148,8 +141,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetSingleValueSourceArrayValuesDifferentType() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:1995, reason:"work"}]->(p)
@@ -170,8 +162,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetArrayValueSourceArrayValuesDifferentTypeAndOneSameValue() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:["1995","2014"], reason:"work"}]->(p)
@@ -192,8 +183,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetSingleValueSourceSingleValuesSameTypeAndSameValue() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:1996, reason:"work"}]->(p)
@@ -212,8 +202,7 @@ class PropertiesManagerTest {
 
     @Test
     void testCombinePropertiesTargetArrayValueSourceArrayValuesSameTypeOneSameValue() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 Create (d:Person {name:'Daniele'})
                 Create (p:Country {name:'USA'})
                 Create (d)-[:TRAVELS_TO {year:[1995,2014], reason:"work"}]->(p)

@@ -84,13 +84,11 @@ class ExportGraphMLTest {
     private static final String exportQueryRelOnly =
             "CALL apoc.export.graphml.query('MATCH (start:Start)-[rel:REL]->(end:End) RETURN rel', $file, $config)";
 
-    private static final String exportDataWithRelOnly =
-            """
+    private static final String exportDataWithRelOnly = """
                 MATCH (start:Start)-[rel:REL]->(end:End)
                 CALL apoc.export.graphml.data([], [rel], $file, {})
                 YIELD nodes, relationships, properties RETURN *""";
-    private static final String exportDataWithStartAndRel =
-            """
+    private static final String exportDataWithStartAndRel = """
                 MATCH (start:Start)-[rel:REL]->(end:End)
                 CALL apoc.export.graphml.data([start], [rel], $file, $config)
                 YIELD nodes, relationships, properties RETURN *""";
@@ -123,8 +121,7 @@ class ExportGraphMLTest {
         builder.setConfig(GraphDatabaseSettings.memory_tracking, true);
     }
 
-    private String testWithUnknownDefault =
-            """
+    private String testWithUnknownDefault = """
             <?xml version="1.0" encoding="UTF-8" standalone="no"?>
             <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
               <key attr.name="restBaseUrl" attr.type="string" for="node" id="d3">
@@ -189,8 +186,7 @@ class ExportGraphMLTest {
     void testRelDefinedBeforeNodes() throws Exception {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
 
-        String xml =
-                """
+        String xml = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns      http://graphml.graphdrawing.org/xmlns/1.0/graphml.xsd">
                   <edge id="e183" source="n27" target="n72">
@@ -248,8 +244,7 @@ class ExportGraphMLTest {
     void testRelsBothBeforeAndAfterNodes() throws Exception {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
 
-        String xml =
-                """
+        String xml = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
                   <key id="w" for="edge" attr.name="weight" attr.type="int"/>
@@ -286,8 +281,7 @@ class ExportGraphMLTest {
     void testRelBeforeNodesWithSourceTargetConfig() throws Exception {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
 
-        String xml =
-                """
+        String xml = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
                   <key id="name" for="node" attr.name="name" attr.type="string"/>
@@ -326,8 +320,7 @@ class ExportGraphMLTest {
     void testRelReferencingMissingNodeFails() throws Exception {
         db.executeTransactionally("MATCH (n) DETACH DELETE n");
 
-        String xml =
-                """
+        String xml = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <graphml xmlns="http://graphml.graphdrawing.org/xmlns">
                   <edge id="e1" source="n1" target="n2"/>
@@ -733,8 +726,7 @@ class ExportGraphMLTest {
 
         File output = new File(directory, "gemTest.graphml");
         FileWriter fw = new FileWriter(output);
-        String NAN_NUMBERS =
-                """
+        String NAN_NUMBERS = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <graphml xmlns="http://graphml.graphdrawing.org/xmlns"
                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -847,9 +839,7 @@ class ExportGraphMLTest {
         db.executeTransactionally("CREATE (p:Person {name: 'Foo0'})");
 
         File output = new File(directory, "data.graphml");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                         WITH COLLECT {
                             MATCH (person:Person)
                             WHERE person.name STARTS WITH "F"
@@ -857,9 +847,7 @@ class ExportGraphMLTest {
                         } AS people
                         CALL apoc.export.graphml.data(people, [], $file, {})
                         YIELD file, source, format, nodes, relationships, properties, time, rows, batchSize, batches, done, data
-                        RETURN *""",
-                map("file", output.getAbsolutePath()),
-                (r) -> assertEquals(2L, r.get("nodes")));
+                        RETURN *""", map("file", output.getAbsolutePath()), (r) -> assertEquals(2L, r.get("nodes")));
         assertXMLEquals(output, EXPECTED_DATA);
     }
 
@@ -1386,16 +1374,12 @@ class ExportGraphMLTest {
         for (String query : invalidQueries) {
             QueryExecutionException e = assertThrows(
                     QueryExecutionException.class,
-                    () -> TestUtil.testCall(
-                            db,
-                            """
+                    () -> TestUtil.testCall(db, """
                         CALL apoc.export.graphml.query(
                         $query,
                         $file,
                         {}
-                        )""",
-                            map("query", query, "file", filename),
-                            (r) -> {}));
+                        )""", map("query", query, "file", filename), (r) -> {}));
 
             assertError(e, INVALID_QUERY_MODE_ERROR, RuntimeException.class, "apoc.export.graphml.query");
         }

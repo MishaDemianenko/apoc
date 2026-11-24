@@ -98,8 +98,7 @@ class ExportCsvTest {
             + "Andrea,Milano,\"Via Garibaldi, 7\",\"[\"\"Address1\"\",\"\"Address\"\"]\"%n"
             + "Bar Sport,,,\"[\"\"Address\"\"]\"%n"
             + ",,via Benni,\"[\"\"Address\"\"]\"%n");
-    private static final String EXPECTED_ALL_ALWAYS =
-            """
+    private static final String EXPECTED_ALL_ALWAYS = """
             "_id","_labels","age","city","kids","male","name","street","_start","_end","_type","id","value1","value2"
             "0",":User:User1","42","","[""a"",""b"",""c""]","true","foo","",,,,,,
             "1",":User","42","","","","bar","",,,,,,
@@ -115,8 +114,7 @@ class ExportCsvTest {
             ,,,,,,,,"3","4","NEXT_DELIVERY","","",""
             ,,,,,,,,"8","9","REL","0"," ",""
             """;
-    private static final String EXPECTED_ALL_ALWAYS_2 =
-            """
+    private static final String EXPECTED_ALL_ALWAYS_2 = """
             "_id","_labels","age","city","kids","male","name","street","_start","_end","_type","id","value1","value2"
             "0",":User:User1","42","","[""a"",""b"",""c""]","true","foo","",,,,,,
             "1",":User","42","","","","bar","",,,,,,
@@ -132,74 +130,61 @@ class ExportCsvTest {
             ,,,,,,,,"8","9","REL","0"," ",""
             ,,,,,,,,"3","4","NEXT_DELIVERY","","",""
             """;
-    private static final List<String> EXPECTED_ALL_ALWAYS_USER = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_ALWAYS_USER = List.of("""
             ":ID","name","age:long",":LABEL"
             "1","bar","42","User"
             "2","","12","User"
-            """,
-            """
+            """, """
             ":ID","age:long","name",":LABEL"
             "1","42","bar","User"
             "2","12","","User"
             """);
-    private static final List<String> EXPECTED_ALL_ALWAYS_USER1 = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_ALWAYS_USER1 = List.of("""
             ":ID","name","age:long","male:boolean","kids",":LABEL"
             "0","foo","42","true","[""a"",""b"",""c""]","User1;User"
-            """,
-            """
+            """, """
             ":ID","age:long","kids","male:boolean","name",":LABEL"
             "0","42","[""a"",""b"",""c""]","true","foo","User1;User"
             """);
-    private static final String EXPECTED_ALL_ALWAYS_ADDRESS =
-            """
+    private static final String EXPECTED_ALL_ALWAYS_ADDRESS = """
             ":ID","name","street",":LABEL"
             "4","Bar Sport","","Address"
             "5","","via Benni","Address"
             """;
-    private static final String EXPECTED_ALL_ALWAYS_ADDRESS1 =
-            """
+    private static final String EXPECTED_ALL_ALWAYS_ADDRESS1 = """
             ":ID","name","city","street",":LABEL"
             "3","Andrea","Milano","Via Garibaldi, 7","Address1;Address"
             """;
-    private static final List<String> EXPECTED_ALL_ALWAYS_ESCAPING = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_ALWAYS_ESCAPING = List.of("""
             ":ID","name","age:long",":LABEL"
             "6","I am ""groot"", and more ","1","ESCAPING"
             "7"," ","2","ESCAPING"
             "8","","3","ESCAPING"
             "9","","4","ESCAPING"
-            """,
-            """
+            """, """
             ":ID","age:long","name",":LABEL"
             "6","1","I am ""groot"", and more ","ESCAPING"
             "7","2"," ","ESCAPING"
             "8","3","","ESCAPING"
             "9","4","","ESCAPING"
             """);
-    private static final String EXPECTED_ALL_ALWAYS_KNOWS =
-            """
+    private static final String EXPECTED_ALL_ALWAYS_KNOWS = """
             ":START_ID",":END_ID",":TYPE"
             "0","1","KNOWS"
             """;
-    private static final String EXPECTED_ALL_ALWAYS_NEXT_DELIVERY =
-            """
+    private static final String EXPECTED_ALL_ALWAYS_NEXT_DELIVERY = """
             ":START_ID",":END_ID",":TYPE"
             "3","4","NEXT_DELIVERY"
             """;
-    private static final List<String> EXPECTED_ALL_ALWAYS_REL = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_ALWAYS_REL = List.of("""
             ":START_ID",":END_ID",":TYPE","value2","value1","id:long"
             "8","9","REL",""," ","0"
-            """,
-            """
+            """, """
             ":START_ID",":END_ID",":TYPE","id:long","value1","value2"
             "8","9","REL","0"," ",""
             """);
 
-    private static final String EXP_SAMPLE =
-            """
+    private static final String EXP_SAMPLE = """
             "_id","_labels","address","age","baz","city","foo","kids","last:Name","male","name","street","_start","_end","_type","id","one","three","value1","value2"
             "0",":User:User1","","42","","","","[""a"",""b"",""c""]","","true","foo","",,,,,,,,
             "1",":User","","42","","","","","","","bar","",,,,,,,,
@@ -220,8 +205,7 @@ class ExportCsvTest {
             ,,,,,,,,,,,,"8","9","REL","0","",""," ",""
             ,,,,,,,,,,,,"12","13","KNOWS","","two","four","",""
             """;
-    private static final String EXPECTED_ALL_NONE =
-            """
+    private static final String EXPECTED_ALL_NONE = """
             _id,_labels,age,city,kids,male,name,street,_start,_end,_type,id,value1,value2
             0,:User:User1,42,,["a","b","c"],true,foo,,,,,,,
             1,:User,42,,,,bar,,,,,,,
@@ -238,8 +222,7 @@ class ExportCsvTest {
             ,,,,,,,,3,4,NEXT_DELIVERY,,,
             """;
 
-    private static final String EXPECTED_ALL_NONE_2 =
-            """
+    private static final String EXPECTED_ALL_NONE_2 = """
             _id,_labels,age,city,kids,male,name,street,_start,_end,_type,id,value1,value2
             0,:User:User1,42,,["a","b","c"],true,foo,,,,,,,
             1,:User,42,,,,bar,,,,,,,
@@ -256,29 +239,24 @@ class ExportCsvTest {
             ,,,,,,,,8,9,REL,0, ,
             """;
 
-    private static final List<String> EXPECTED_ALL_NONE_USER1 = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_NONE_USER1 = List.of("""
             :ID,name,age:long,male:boolean,kids,:LABEL
             0,foo,42,true,["a","b","c"],User1;User
-            """,
-            """
+            """, """
             :ID,age:long,kids,male:boolean,name,:LABEL
             0,42,["a","b","c"],true,foo,User1;User
             """);
-    private static final String EXPECTED_ALL_NONE_ADDRESS1 =
-            """
+    private static final String EXPECTED_ALL_NONE_ADDRESS1 = """
             :ID,name,city,street,:LABEL
             3,Andrea,Milano,Via Garibaldi, 7,Address1;Address
             """;
-    private static final List<String> EXPECTED_ALL_NONE_ESCAPING = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_NONE_ESCAPING = List.of("""
             :ID,name,age:long,:LABEL
             6,I am "groot", and more ,1,ESCAPING
             7, ,2,ESCAPING
             8,,3,ESCAPING
             9,,4,ESCAPING
-            """,
-            """
+            """, """
             :ID,age:long,name,:LABEL
             6,1,I am "groot", and more ,ESCAPING
             7,2, ,ESCAPING
@@ -286,14 +264,12 @@ class ExportCsvTest {
             9,4,,ESCAPING
             """);
 
-    private static final String EXPECTED_ALL_IF_NEEDED_RELS =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED_RELS = """
             ,,,,,,,,0,1,KNOWS,,,
             ,,,,,,,,3,4,NEXT_DELIVERY,,,
             ,,,,,,,,8,9,REL,0, ,""
             """;
-    private static final String EXPECTED_ALL_IF_NEEDED =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED = """
             _id,_labels,age,city,kids,male,name,street,_start,_end,_type,id,value1,value2
             0,:User:User1,42,,"[""a"",""b"",""c""]",true,foo,,,,,,,
             1,:User,42,,,,bar,,,,,,,
@@ -310,153 +286,130 @@ class ExportCsvTest {
             ,,,,,,,,8,9,REL,0, ,
             """;
 
-    private static final List<String> EXPECTED_ALL_IF_NEEDED_USER = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_IF_NEEDED_USER = List.of("""
             :ID,name,age:long,:LABEL
             1,bar,42,User
             2,,12,User
-            """,
-            """
+            """, """
             :ID,age:long,name,:LABEL
             1,42,bar,User
             2,12,,User
             """);
-    private static final List<String> EXPECTED_ALL_IF_NEEDED_USER1 = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_IF_NEEDED_USER1 = List.of("""
             :ID,name,age:long,male:boolean,kids,:LABEL
             0,foo,42,true,"[""a"",""b"",""c""]",User1;User
-            """,
-            """
+            """, """
             :ID,age:long,kids,male:boolean,name,:LABEL
             0,42,"[""a"",""b"",""c""]",true,foo,User1;User
             """);
-    private static final String EXPECTED_ALL_IF_NEEDED_ADDRESS =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED_ADDRESS = """
             :ID,name,street,:LABEL
             4,Bar Sport,,Address
             5,,via Benni,Address
             """;
-    private static final String EXPECTED_ALL_IF_NEEDED_ADDRESS1 =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED_ADDRESS1 = """
             :ID,name,city,street,:LABEL
             3,Andrea,Milano,"Via Garibaldi, 7",Address1;Address
             """;
-    private static final List<String> EXPECTED_ALL_IF_NEEDED_ESCAPING = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_IF_NEEDED_ESCAPING = List.of("""
             :ID,name,age:long,:LABEL
             6,"I am ""groot"", and more ",1,ESCAPING
             7, ,2,ESCAPING
             8,,3,ESCAPING
             9,,4,ESCAPING
-            """,
-            """
+            """, """
             :ID,age:long,name,:LABEL
             6,1,"I am ""groot"", and more ",ESCAPING
             7,2, ,ESCAPING
             8,3,,ESCAPING
             9,4,,ESCAPING
             """);
-    private static final String EXPECTED_ALL_IF_NEEDED_KNOWS =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED_KNOWS = """
             :START_ID,:END_ID,:TYPE
             0,1,KNOWS
             """;
-    private static final String EXPECTED_ALL_IF_NEEDED_NEXT_DELIVERY =
-            """
+    private static final String EXPECTED_ALL_IF_NEEDED_NEXT_DELIVERY = """
             :START_ID,:END_ID,:TYPE
             3,4,NEXT_DELIVERY
             """;
-    private static final List<String> EXPECTED_ALL_IF_NEEDED_REL = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_IF_NEEDED_REL = List.of("""
             :START_ID,:END_ID,:TYPE,value2,value1,id:long
             8,9,REL,, ,0
-            """,
-            """
+            """, """
             :START_ID,:END_ID,:TYPE,id:long,value1,value2
             8,9,REL,0, ,
             """);
-    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_NONE =
-            """
+    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_NONE = """
             age,name
             1,I am "groot", and more\s
             2,\s
             3,
             4,
             """;
-    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_IF_NEEDED =
-            """
+    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_IF_NEEDED = """
             age,name
             1,"I am ""groot"", and more "
             2,\s
             3,""
             4,
             """;
-    private static final String EXPECTED_QUERY_DONT_DIFFERENTIATE_NULLS_IF_NEEDED =
-            """
+    private static final String EXPECTED_QUERY_DONT_DIFFERENTIATE_NULLS_IF_NEEDED = """
             age,name
             1,"I am ""groot"", and more "
             2,\s
             3,
             4,
             """;
-    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_ALWAYS =
-            """
+    private static final String EXPECTED_QUERY_DIFFERENTIATE_NULLS_ALWAYS = """
             "age","name"
             "1","I am ""groot"", and more "
             "2"," "
             "3",""
             "4",
             """;
-    private static final String EXPECTED_QUERY_DONT_DIFFERENTIATE_NULLS_ALWAYS =
-            """
+    private static final String EXPECTED_QUERY_DONT_DIFFERENTIATE_NULLS_ALWAYS = """
             "age","name"
             "1","I am ""groot"", and more "
             "2"," "
             "3",""
             "4",""
             """;
-    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_NONE =
-            """
+    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_NONE = """
             _id,_labels,age,name,_start,_end,_type
             6,:ESCAPING,1,I am "groot", and more ,,,
             7,:ESCAPING,2, ,,,
             8,:ESCAPING,3,,,,
             9,:ESCAPING,4,,,,
             """;
-    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_IF_NEEDED =
-            """
+    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_IF_NEEDED = """
             _id,_labels,age,name,_start,_end,_type
             6,:ESCAPING,1,"I am ""groot"", and more ",,,
             7,:ESCAPING,2, ,,,
             8,:ESCAPING,3,"",,,
             9,:ESCAPING,4,,,,
             """;
-    private static final String EXPECTED_DATA_DONT_DIFFERENTIATE_NULLS_IF_NEEDED =
-            """
+    private static final String EXPECTED_DATA_DONT_DIFFERENTIATE_NULLS_IF_NEEDED = """
             _id,_labels,age,name,_start,_end,_type
             6,:ESCAPING,1,"I am ""groot"", and more ",,,
             7,:ESCAPING,2, ,,,
             8,:ESCAPING,3,,,,
             9,:ESCAPING,4,,,,
             """;
-    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_ALWAYS =
-            """
+    private static final String EXPECTED_DATA_DIFFERENTIATE_NULLS_ALWAYS = """
             "_id","_labels","age","name","_start","_end","_type"
             "6",":ESCAPING","1","I am ""groot"", and more ",,,
             "7",":ESCAPING","2"," ",,,
             "8",":ESCAPING","3","",,,
             "9",":ESCAPING","4",,,,
             """;
-    private static final String EXPECTED_DATA_DONT_DIFFERENTIATE_NULLS_ALWAYS =
-            """
+    private static final String EXPECTED_DATA_DONT_DIFFERENTIATE_NULLS_ALWAYS = """
             "_id","_labels","age","name","_start","_end","_type"
             "6",":ESCAPING","1","I am ""groot"", and more ",,,
             "7",":ESCAPING","2"," ",,,
             "8",":ESCAPING","3","",,,
             "9",":ESCAPING","4","",,,
             """;
-    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED =
-            """
+    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED = """
                     _id,_labels,age,city,kids,male,name,street,_start,_end,_type,id,value1,value2
                     0,:User:User1,42,,"[""a"",""b"",""c""]",true,foo,,,,,,,
                     1,:User,42,,,,bar,,,,,,,
@@ -468,54 +421,45 @@ class ExportCsvTest {
                     7,:ESCAPING,2,,,, ,,,,,,,
                     8,:ESCAPING,3,,,,"",,,,,,,
                     9,:ESCAPING,4,,,,,,,,,,,
-                    """
-                    + EXPECTED_ALL_IF_NEEDED_RELS;
+                    """ + EXPECTED_ALL_IF_NEEDED_RELS;
 
-    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_USER = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_USER = List.of("""
             :ID,name,age:long,:LABEL
             1,bar,42,User
             2,,12,User
-            """,
-            """
+            """, """
             :ID,age:long,name,:LABEL
             1,42,bar,User
             2,12,,User
             """);
 
-    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_ADDRESS =
-            """
+    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_ADDRESS = """
             :ID,name,street,:LABEL
             4,Bar Sport,,Address
             5,,via Benni,Address
             """;
-    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_ESCAPING = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_ESCAPING = List.of("""
             :ID,name,age:long,:LABEL
             6,"I am ""groot"", and more ",1,ESCAPING
             7, ,2,ESCAPING
             8,"",3,ESCAPING
             9,,4,ESCAPING
-            """,
-            """
+            """, """
             :ID,age:long,name,:LABEL
             6,1,"I am ""groot"", and more ",ESCAPING
             7,2, ,ESCAPING
             8,3,"",ESCAPING
             9,4,,ESCAPING
             """);
-    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_REL = List.of(
-            """
+    private static final List<String> EXPECTED_ALL_DIFFERENTIATE_NULLS_IF_NEEDED_REL = List.of("""
             :START_ID,:END_ID,:TYPE,value2,value1,id:long
             8,9,REL,"", ,0
-            """,
-            """
+            """, """
             :START_ID,:END_ID,:TYPE,id:long,value1,value2
             8,9,REL,0, ,""
             """);
 
-    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_ALWAYS =
-            """
+    private static final String EXPECTED_ALL_DIFFERENTIATE_NULLS_ALWAYS = """
             "_id","_labels","age","city","kids","male","name","street","_start","_end","_type","id","value1","value2"
             "0",":User:User1","42",,"[""a"",""b"",""c""]","true","foo",,,,,,,
             "1",":User","42",,,,"bar",,,,,,,
@@ -567,8 +511,7 @@ class ExportCsvTest {
                 "CREATE (f:User1:User {name:'foo',age:42,male:true,kids:['a','b','c']})-[:KNOWS]->(b:User {name:'bar',age:42}),(c:User {age:12})");
         db.executeTransactionally(
                 "CREATE (f:Address1:Address {name:'Andrea', city: 'Milano', street:'Via Garibaldi, 7'})-[:NEXT_DELIVERY]->(a:Address {name: 'Bar Sport'}), (b:Address {street: 'via Benni'})");
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
         CREATE
             (:ESCAPING {age: 1, name: 'I am "groot", and more '}),
             (:ESCAPING {age: 2, name: ' '}),
@@ -604,27 +547,24 @@ class ExportCsvTest {
     void textExportWithTypes() {
         db.executeTransactionally(
                 "CREATE (n:TestNode) SET n = {valFloat:toFloat(123), name:'NodeName', valInt:5, dateVal: date('2024-11-01')};");
-        testCall(
-                db,
-                """
+        testCall(db, """
                             CALL apoc.graph.fromCypher("MATCH (n:TestNode) RETURN n", {}, 'TestNode.csv',{}) YIELD graph
                             CALL apoc.export.csv.graph(graph, null, {stream:true, useTypes:true}) YIELD properties, rows, data
                             return properties, rows, data;
-                            """,
-                (r) -> {
-                    String data = (String) r.get("data");
-                    // FLOAT value
-                    assertTrue(data.contains("valFloat:float"));
-                    assertTrue(data.contains("123.0"));
-                    // INT value
-                    assertTrue(data.contains("valInt:int"));
-                    assertTrue(data.contains("5"));
-                    // STRING value and unknown types to csv export
-                    assertTrue(data.contains("name"));
-                    assertTrue(data.contains("NodeName"));
-                    assertTrue(data.contains("dateVal"));
-                    assertTrue(data.contains("2024-11-01"));
-                });
+                            """, (r) -> {
+            String data = (String) r.get("data");
+            // FLOAT value
+            assertTrue(data.contains("valFloat:float"));
+            assertTrue(data.contains("123.0"));
+            // INT value
+            assertTrue(data.contains("valInt:int"));
+            assertTrue(data.contains("5"));
+            // STRING value and unknown types to csv export
+            assertTrue(data.contains("name"));
+            assertTrue(data.contains("NodeName"));
+            assertTrue(data.contains("dateVal"));
+            assertTrue(data.contains("2024-11-01"));
+        });
 
         final String deleteQuery = "MATCH (n:TestNode) DETACH DELETE n";
         db.executeTransactionally(deleteQuery);
@@ -915,17 +855,13 @@ class ExportCsvTest {
                         "config",
                         map("quotes", quotingType, "differentiateNulls", shouldDifferentiateNulls));
 
-                testCall(
-                        db,
-                        """
+                testCall(db, """
                         MATCH (n:ESCAPING)
                         WITH COLLECT(n) as nodes
                         CALL apoc.export.csv.data(nodes, [], $file, $config)
                         YIELD file
                         RETURN file
-                        """,
-                        params,
-                        (r) -> assertEquals(fileName, r.get("file")));
+                        """, params, (r) -> assertEquals(fileName, r.get("file")));
 
                 assertEquals(currentCases.get(quotingType), readFile(fileName));
             }
@@ -956,16 +892,12 @@ class ExportCsvTest {
                         "config",
                         map("quotes", quotingType, "differentiateNulls", shouldDifferentiateNulls));
 
-                testCall(
-                        db,
-                        """
+                testCall(db, """
                         CALL apoc.graph.fromCypher('MATCH (n:ESCAPING) RETURN n',{}, 'test',{description: "test graph"}) yield graph
                         CALL apoc.export.csv.graph(graph, $file, $config)
                         YIELD file
                         RETURN file
-                        """,
-                        params,
-                        (r) -> assertEquals(fileName, r.get("file")));
+                        """, params, (r) -> assertEquals(fileName, r.get("file")));
 
                 assertEquals(currentCases.get(quotingType), readFile(fileName));
             }
@@ -1162,16 +1094,12 @@ class ExportCsvTest {
         for (String query : invalidQueries) {
             QueryExecutionException e = assertThrows(
                     QueryExecutionException.class,
-                    () -> testCall(
-                            db,
-                            """
+                    () -> testCall(db, """
                         CALL apoc.export.csv.query(
                         $query,
                         $file,
                         {quotes: false}
-                        )""",
-                            map("query", query, "file", filename),
-                            (r) -> {}));
+                        )""", map("query", query, "file", filename), (r) -> {}));
 
             assertError(e, INVALID_QUERY_MODE_ERROR, RuntimeException.class, "apoc.export.csv.query");
         }

@@ -75,7 +75,8 @@ public class Neighbors {
         return node.getRelationships(typesAndDirection.getRight(), typesAndDirection.getLeft());
     }
 
-    public record NeighborNodeResult(@Description("A neighboring node.") Node node) {}
+    public record NeighborNodeResult(
+            @Description("A neighboring node.") Node node) {}
 
     @Procedure("apoc.neighbors.tohop")
     @Description(
@@ -105,7 +106,8 @@ public class Neighbors {
     }
 
     public record NeighborLongResult(
-            @Description("The total count of neighboring nodes within the given hop distance.") Long value) {}
+            @Description("The total count of neighboring nodes within the given hop distance.")
+            Long value) {}
 
     @Procedure("apoc.neighbors.tohop.count")
     @Description(
@@ -169,7 +171,8 @@ public class Neighbors {
     }
 
     public record NeighborListResult(
-            @Description("A list of neighbor counts for each distinct hop distance.") List<Object> value) {}
+            @Description("A list of neighbor counts for each distinct hop distance.")
+            List<Object> value) {}
 
     @Procedure("apoc.neighbors.byhop.count")
     @Description(
@@ -207,7 +210,8 @@ public class Neighbors {
         });
     }
 
-    public record NeighboringNodeResult(@Description("A neighboring node.") Node node) {}
+    public record NeighboringNodeResult(
+            @Description("A neighboring node.") Node node) {}
 
     @Procedure("apoc.neighbors.athop")
     @Description("Returns all `NODE` values connected by the given `RELATIONSHIP` types at the specified distance.")
@@ -234,7 +238,8 @@ public class Neighbors {
     }
 
     public record NeighboursLongResult(
-            @Description("The total count of neighboring nodes at the given hop distance.") Long value) {}
+            @Description("The total count of neighboring nodes at the given hop distance.")
+            Long value) {}
 
     @Procedure("apoc.neighbors.athop.count")
     @Description(

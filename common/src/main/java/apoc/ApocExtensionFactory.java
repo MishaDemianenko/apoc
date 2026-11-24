@@ -113,9 +113,10 @@ public class ApocExtensionFactory extends ExtensionFactory<ApocExtensionFactory.
                 }
 
                 String databaseName = db.databaseName();
-                services.values().forEach(lifecycle -> dependencies
-                        .registerComponentLifecycle()
-                        .addResolver(databaseName, lifecycle.getClass(), lifecycle));
+                services.values()
+                        .forEach(lifecycle -> dependencies
+                                .registerComponentLifecycle()
+                                .addResolver(databaseName, lifecycle.getClass(), lifecycle));
             });
         }
 
@@ -171,9 +172,10 @@ public class ApocExtensionFactory extends ExtensionFactory<ApocExtensionFactory.
         @Override
         public void shutdown() throws Exception {
             String databaseName = db.databaseName();
-            services.values().forEach(lifecycle -> dependencies
-                    .registerComponentLifecycle()
-                    .cleanUpResolver(databaseName, lifecycle.getClass()));
+            services.values()
+                    .forEach(lifecycle -> dependencies
+                            .registerComponentLifecycle()
+                            .cleanUpResolver(databaseName, lifecycle.getClass()));
         }
 
         public Collection<AvailabilityListener> getRegisteredListeners() {

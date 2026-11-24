@@ -67,8 +67,7 @@ class StringsTest {
 
     @Test
     void testIndexOfSubstring() {
-        String query =
-                """
+        String query = """
                 WITH 'Hello World!' as text
                 WITH text, size(text) as len, apoc.text.indexOf(text, 'World',3) as index
                 RETURN substring(text, case index when -1 then len-1 else index end, len) as value;
@@ -627,12 +626,10 @@ class StringsTest {
                         (r) -> {}));
         Throwable except = ExceptionUtils.getRootCause(e);
         assertInstanceOf(RuntimeException.class, except);
-        assertEquals(
-                """
+        assertEquals("""
                 Invalid regex pattern: Named capturing group <firstPart> is already defined near index 32
                 (?<firstPart>\\w+)?\\_(?<firstPart>\\w+)?
-                                                ^""",
-                except.getMessage());
+                                                ^""", except.getMessage());
     }
 
     @Test
@@ -642,11 +639,9 @@ class StringsTest {
                 () -> testCall(db, "RETURN apoc.text.regexGroupsByName('asset_','(?<firstPart') AS result", (r) -> {}));
         Throwable except = ExceptionUtils.getRootCause(e);
         assertInstanceOf(RuntimeException.class, except);
-        assertEquals(
-                """
+        assertEquals("""
                 Invalid regex pattern: named capturing group is missing trailing '>' near index 12
-                (?<firstPart""",
-                except.getMessage());
+                (?<firstPart""", except.getMessage());
     }
 
     @Test

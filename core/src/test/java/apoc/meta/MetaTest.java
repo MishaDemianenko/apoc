@@ -199,8 +199,7 @@ class MetaTest {
 
     @Test
     void testMetaGraphExtraRels() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (a:S1 {SomeName1:'aaa'})
                 CREATE (b:S2 {SomeName2:'bbb'})
                 CREATE (c:S3 {SomeName3:'ccc'})
@@ -426,23 +425,15 @@ class MetaTest {
     void testVectorTypes() {
         var vectorTypes = List.of("INT64", "INT32", "INT16", "INT8", "FLOAT64", "FLOAT32");
         for (String type : vectorTypes) {
-            TestUtil.testCall(
-                    db,
-                    """
+            TestUtil.testCall(db, """
                             CYPHER 25
                             WITH VECTOR([1, 2, 3], 3, %s) AS v
-                            RETURN apoc.meta.cypher.type(v) AS value"""
-                            .formatted(type),
-                    row -> assertEquals("VECTOR", row.get("value")));
+                            RETURN apoc.meta.cypher.type(v) AS value""".formatted(type), row -> assertEquals("VECTOR", row.get("value")));
 
-            TestUtil.testCall(
-                    db,
-                    """
+            TestUtil.testCall(db, """
                             CYPHER 25
                             WITH VECTOR([1, 2, 3], 3, %s) AS v
-                            RETURN apoc.meta.cypher.isType(v, "VECTOR") AS value"""
-                            .formatted(type),
-                    row -> assertEquals(true, row.get("value")));
+                            RETURN apoc.meta.cypher.isType(v, "VECTOR") AS value""".formatted(type), row -> assertEquals(true, row.get("value")));
         }
     }
 
@@ -589,8 +580,7 @@ class MetaTest {
 
     @Test
     void testVectorIndexes() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE VECTOR INDEX moviePlots IF NOT EXISTS
                 FOR (m:Movie)
                 ON m.embedding
@@ -602,95 +592,88 @@ class MetaTest {
 
         db.executeTransactionally("CREATE (m:Movie {name:'The Movie', embedding: [1, 2, 3]})");
 
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
                 CALL apoc.meta.data()
                 YIELD label, property, count, unique, index, existence, type, array, left, right, other, otherLabels, elementType
-                RETURN * ORDER BY elementType, property""",
-                (r) -> {
-                    Map<String, Object> row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertEquals("embedding", row.get("property"));
-                    assertEquals("Movie", row.get("label"));
-                    assertEquals(true, row.get("index"));
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertEquals("name", row.get("property"));
-                    assertEquals("Movie", row.get("label"));
-                    assertEquals(false, row.get("index"));
-                    assertFalse(r.hasNext());
-                });
+                RETURN * ORDER BY elementType, property""", (r) -> {
+            Map<String, Object> row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertEquals("embedding", row.get("property"));
+            assertEquals("Movie", row.get("label"));
+            assertEquals(true, row.get("index"));
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertEquals("name", row.get("property"));
+            assertEquals("Movie", row.get("label"));
+            assertEquals(false, row.get("index"));
+            assertFalse(r.hasNext());
+        });
     }
 
     @Test
     void testMetaData() {
         db.executeTransactionally("create index for (n:Movie) on (n.title)");
         db.executeTransactionally("create constraint for (a:Actor) require a.name is unique");
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (actor1:Actor {name:'Tom Hanks'})-[:ACTED_IN {roles:'Forrest'}]->(movie1:Movie {title:'Forrest Gump'}),
                 (actor2:Actor {name: 'Bruce Lee'})-[:ACTED_IN {roles:'FooBaz'}]->(movie1),
                 (actor1)-[:ACTED_IN {roles:'Movie2Role'}]->(movie2:Movie {title:'Movie2'}), (actor1)-[:ACTED_IN {roles:'Movie3Role'}]->(movie3:Movie {title:'Movie3'}),
                 (actor1)-[:DIRECTED {foo: 'first'}]->(movie2), (actor1)-[:DIRECTED {foo: 'second'}]->(:Movie {title:'Movie4'}),
                 (:Studio {name: 'Pixar'})-[:ANIMATED {bar: 'alpha'}]->(movie2)""");
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
                 CALL apoc.meta.data()
                 YIELD label, property, count, unique, index, existence, type, array, left, right, other, otherLabels, elementType
-                RETURN * ORDER BY elementType, property""",
-                (r) -> {
-                    Map<String, Object> row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertEquals("ACTED_IN", row.get("property"));
-                    assertEquals("Actor", row.get("label"));
-                    assertRelationshipActedInMetaData(row);
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertEquals("ANIMATED", row.get("property"));
-                    assertEquals("Studio", row.get("label"));
-                    assertRelationshipsAnimatedMetaData(row);
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertEquals("DIRECTED", row.get("property"));
-                    assertEquals("Actor", row.get("label"));
-                    assertRelationshipsDirectedMetaData(row);
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    row = r.next();
-                    assertEquals("node", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertEquals("ACTED_IN", row.get("label"));
-                    assertEquals("Actor", row.get("property"));
-                    assertRelationshipActedInMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertEquals("DIRECTED", row.get("label"));
-                    assertEquals("Actor", row.get("property"));
-                    assertRelationshipsDirectedMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertEquals("ANIMATED", row.get("label"));
-                    assertEquals("Studio", row.get("property"));
-                    assertRelationshipsAnimatedMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    row = r.next();
-                    assertEquals("relationship", row.get("elementType"));
-                    assertPropertiesMetaData(row);
-                    assertFalse(r.hasNext());
-                });
+                RETURN * ORDER BY elementType, property""", (r) -> {
+            Map<String, Object> row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertEquals("ACTED_IN", row.get("property"));
+            assertEquals("Actor", row.get("label"));
+            assertRelationshipActedInMetaData(row);
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertEquals("ANIMATED", row.get("property"));
+            assertEquals("Studio", row.get("label"));
+            assertRelationshipsAnimatedMetaData(row);
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertEquals("DIRECTED", row.get("property"));
+            assertEquals("Actor", row.get("label"));
+            assertRelationshipsDirectedMetaData(row);
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            row = r.next();
+            assertEquals("node", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertEquals("ACTED_IN", row.get("label"));
+            assertEquals("Actor", row.get("property"));
+            assertRelationshipActedInMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertEquals("DIRECTED", row.get("label"));
+            assertEquals("Actor", row.get("property"));
+            assertRelationshipsDirectedMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertEquals("ANIMATED", row.get("label"));
+            assertEquals("Studio", row.get("property"));
+            assertRelationshipsAnimatedMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            row = r.next();
+            assertEquals("relationship", row.get("elementType"));
+            assertPropertiesMetaData(row);
+            assertFalse(r.hasNext());
+        });
     }
 
     private void assertRelationshipsDirectedMetaData(Map<String, Object> row) {
@@ -920,20 +903,20 @@ class MetaTest {
         db.executeTransactionally(
                 "CREATE (:Foo), (:Other)-[:REL_0]->(:Other), (:Other)-[:REL_1]->(:Other)<-[:REL_2 {baz: 'baa'}]-(:Other), (:Other {alpha: 'beta'}), (:Other {foo:'bar'})-[:REL_3]->(:Other)");
         testCall(
-                db, "CALL apoc.meta.schema({sample: 2})", (row) -> ((Map<String, Map<String, Object>>) row.get("value"))
-                        .forEach((key, value) -> {
-                            if (labels.contains(key)) {
-                                assertEquals("node", value.get("type"));
-                            } else {
-                                assertEquals("relationship", value.get("type"));
-                            }
-                        }));
+                db,
+                "CALL apoc.meta.schema({sample: 2})",
+                (row) -> ((Map<String, Map<String, Object>>) row.get("value")).forEach((key, value) -> {
+                    if (labels.contains(key)) {
+                        assertEquals("node", value.get("type"));
+                    } else {
+                        assertEquals("relationship", value.get("type"));
+                    }
+                }));
     }
 
     @Test
     void testIssue1861LabelAndTypeWithSameName() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (s0 :person{id:1} ) SET s0.name = 'rose'
                 CREATE (t0 :person{id:2}) SET t0.name = 'jack'
                 MERGE (s0) -[r0:person {alfa: 'beta'}] -> (t0)""");
@@ -972,8 +955,7 @@ class MetaTest {
 
     @Test
     void testSubGraphNonExistingLabels() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 MATCH (n) DETACH DELETE n
                 WITH COUNT(1) as foo
                 CREATE (:Foo), (:Bar), (:Test) // label Test created here
@@ -1001,8 +983,7 @@ class MetaTest {
 
     @Test
     void testSubGraphNonExistingTypes() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 MATCH (n) DETACH DELETE n
                 WITH COUNT(1) as foo
                 CREATE (:Foo)-[:R]->(:Bar)-[:Rtest]->(:Test)
@@ -1309,9 +1290,10 @@ class MetaTest {
         db.executeTransactionally("CREATE (:Person {name:'Sarah', surname:'Taylor'})");
         db.executeTransactionally("CREATE (:Person {name:'Jane'})");
         db.executeTransactionally("CREATE (:Person {name:'Jeff', surname:'Logan'})");
-        TestUtil.testResult(db, "CALL apoc.meta.data({sample:2})", (r) -> assertThat(
-                        r.stream().map(m -> m.get("property")))
-                .containsExactlyInAnyOrder("name", "surname"));
+        TestUtil.testResult(
+                db,
+                "CALL apoc.meta.data({sample:2})",
+                (r) -> assertThat(r.stream().map(m -> m.get("property"))).containsExactlyInAnyOrder("name", "surname"));
     }
 
     @Test
@@ -2444,8 +2426,7 @@ class MetaTest {
     void testMetaSchemaWithGraphTypes() {
         db.executeTransactionally(
                 "CREATE (:Person {fullName: \"Peter Rabbit\", id: \"13\"})-[:KNOWS {prop1: 1}]->(:Person {fullName: \"Jemima Puddleduck\", id: \"23\"})");
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CYPHER 25
                 ALTER CURRENT GRAPH TYPE SET {
                   (:`Person` => {`fullName` :: STRING, `id` :: STRING NOT NULL}),

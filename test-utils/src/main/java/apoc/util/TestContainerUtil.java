@@ -178,11 +178,10 @@ public class TestContainerUtil {
 
         if (!testDockerBundle) {
             for (ApocPackage apocPackage : apocPackages) {
-                final String jarPathProp =
-                        switch (apocPackage) {
-                            case CORE -> "apoc-core.test.jar.path";
-                            case EXTENDED -> "apoc-extended.test.jar.path";
-                        };
+                final String jarPathProp = switch (apocPackage) {
+                    case CORE -> "apoc-core.test.jar.path";
+                    case EXTENDED -> "apoc-extended.test.jar.path";
+                };
                 final var jarPath = Path.of(System.getProperty(jarPathProp));
                 final var destination = pluginsFolder.toPath().resolve(jarPath.getFileName());
                 try {
@@ -313,8 +312,7 @@ public class TestContainerUtil {
             Cypher: %s
             Params: %s
             Results (%s rows):
-            %s"""
-                    .formatted(cypher, params, result.size(), resultString);
+            %s""".formatted(cypher, params, result.size(), resultString);
         });
     }
 

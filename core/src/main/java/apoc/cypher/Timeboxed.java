@@ -79,11 +79,10 @@ public class Timeboxed {
 
     String sanitizedCypher(String cypher) {
         final var neo4jConfig = apocConfig.getNeo4jConfig();
-        final var defaultLanguage =
-                switch (neo4jConfig.get(GraphDatabaseSettings.default_language)) {
-                    case Cypher5 -> CypherVersion.Cypher5;
-                    case Cypher25 -> CypherVersion.Cypher25;
-                };
+        final var defaultLanguage = switch (neo4jConfig.get(GraphDatabaseSettings.default_language)) {
+            case Cypher5 -> CypherVersion.Cypher5;
+            case Cypher25 -> CypherVersion.Cypher25;
+        };
         return LogsUtil.sanitizeQuery(neo4jConfig, cypher, defaultLanguage);
     }
 

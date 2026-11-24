@@ -93,8 +93,7 @@ class ExportJsonTest {
 
     @BeforeEach
     void setup() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                         CREATE (f:User {
                             name:'Adam',
                             age:42,
@@ -139,15 +138,11 @@ class ExportJsonTest {
         for (String query : invalidQueries) {
             QueryExecutionException e = assertThrows(
                     QueryExecutionException.class,
-                    () -> TestUtil.testCall(
-                            db,
-                            """
+                    () -> TestUtil.testCall(db, """
                         CALL apoc.export.json.query(
                         $query,
                         $file
-                        )""",
-                            map("query", query, "file", filename),
-                            (r) -> {}));
+                        )""", map("query", query, "file", filename), (r) -> {}));
 
             assertError(e, INVALID_QUERY_MODE_ERROR, RuntimeException.class, "apoc.export.json.query");
         }
@@ -285,8 +280,7 @@ class ExportJsonTest {
     @Test
     void testExportPointMapDatetimeJson() {
         String filename = "mapPointDatetime.json";
-        String query =
-                """
+        String query = """
                 RETURN {
                     data: 1,
                     value: {
@@ -319,8 +313,7 @@ class ExportJsonTest {
     @Test
     void testExportPointMapDatetimeStreamJson() {
         String filename = "mapPointDatetime.json";
-        String query =
-                """
+        String query = """
                 RETURN {
                     data: 1,
                     value: {
@@ -433,8 +426,7 @@ class ExportJsonTest {
 
     @Test
     void testExportMapPath() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                         CREATE (
                             f:User {name:'Mike',age:78,male:true}
                         )-[:KNOWS {since: 1850}]->(
@@ -472,8 +464,7 @@ class ExportJsonTest {
     void testExportMapComplex() {
         String filename = "MapComplex.json";
 
-        String query =
-                """
+        String query = """
                     RETURN {
                         value:1,
                         data:[
@@ -586,19 +577,15 @@ class ExportJsonTest {
     @Test
     void testExportData() {
         String filename = "data.json";
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                         MATCH (nod:User) MATCH ()-[reels:KNOWS]->()
                         WITH collect(nod) AS node, collect(reels) AS rels
                         CALL apoc.export.json.data(node, rels, $file, null)
                         YIELD nodes, relationships, properties, file, source, format, time
-                        RETURN *""",
-                map("file", filename),
-                (r) -> {
-                    assertEquals(filename, r.get("file"));
-                    assertEquals("json", r.get("format"));
-                });
+                        RETURN *""", map("file", filename), (r) -> {
+            assertEquals(filename, r.get("file"));
+            assertEquals("json", r.get("format"));
+        });
         assertFileEquals(filename);
     }
 
@@ -620,20 +607,15 @@ class ExportJsonTest {
         for (var entry : filenames.entrySet()) {
             var config = entry.getKey();
             var filename = entry.getValue();
-            TestUtil.testCall(
-                    db,
-                    """
+            TestUtil.testCall(db, """
                             MATCH (nod:User) MATCH ()-[reels:KNOWS]->()
                             WITH collect(nod) AS node, collect(reels) AS rels
                             CALL apoc.export.json.data(node, rels, $file, {%s})
                             YIELD nodes, relationships, properties, file, source, format, time
-                            RETURN *"""
-                            .formatted(config),
-                    map("file", filename),
-                    (r) -> {
-                        assertEquals(filename, r.get("file"));
-                        assertEquals("json", r.get("format"));
-                    });
+                            RETURN *""".formatted(config), map("file", filename), (r) -> {
+                assertEquals(filename, r.get("file"));
+                assertEquals("json", r.get("format"));
+            });
             assertFileEquals(filename);
         }
     }
@@ -731,15 +713,11 @@ class ExportJsonTest {
             var filename = entry.getValue();
 
             TestUtil.testCall(
-                    db,
-                    """
+                    db, """
                             CALL apoc.graph.fromDB('test',{}) YIELD graph
                             CALL apoc.export.json.graph(graph, $file, {%s})
                             YIELD nodes, relationships, properties, file, source, format, time
-                            RETURN *"""
-                            .formatted(config),
-                    map("file", filename),
-                    (r) -> assertResults(filename, r, "graph"));
+                            RETURN *""".formatted(config), map("file", filename), (r) -> assertResults(filename, r, "graph"));
             assertFileEquals(filename);
         }
     }
@@ -782,8 +760,7 @@ class ExportJsonTest {
 
     @Test
     void testExportOfNodeIntArrays() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (test:Test {
                     intArray: [1,2,3,4],
                     boolArray: [true,false],
@@ -791,9 +768,7 @@ class ExportJsonTest {
                 })
                 """);
 
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                    CALL apoc.export.json.query(
                         "MATCH (test:Test) RETURN test{.intArray, .boolArray, .floatArray} AS data",
                         null,
@@ -801,15 +776,14 @@ class ExportJsonTest {
                     )
                    YIELD data
                    RETURN data
-                """,
-                (r) -> {
-                    String data = (String) r.get("data");
-                    Map<String, Object> map = Util.fromJson(data, Map.class);
-                    Map<String, Object> arrays = (Map<String, Object>) map.get("data");
-                    assertEquals(new ArrayList<>(Arrays.asList(1L, 2L, 3L, 4L)), arrays.get("intArray"));
-                    assertEquals(new ArrayList<>(Arrays.asList(true, false)), arrays.get("boolArray"));
-                    assertEquals(new ArrayList<>(Arrays.asList(1.0, 2.0)), arrays.get("floatArray"));
-                });
+                """, (r) -> {
+            String data = (String) r.get("data");
+            Map<String, Object> map = Util.fromJson(data, Map.class);
+            Map<String, Object> arrays = (Map<String, Object>) map.get("data");
+            assertEquals(new ArrayList<>(Arrays.asList(1L, 2L, 3L, 4L)), arrays.get("intArray"));
+            assertEquals(new ArrayList<>(Arrays.asList(true, false)), arrays.get("boolArray"));
+            assertEquals(new ArrayList<>(Arrays.asList(1.0, 2.0)), arrays.get("floatArray"));
+        });
 
         db.executeTransactionally("MATCH (n:Test) DETACH DELETE n");
     }

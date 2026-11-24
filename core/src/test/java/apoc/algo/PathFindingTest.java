@@ -43,8 +43,7 @@ import org.neo4j.test.extension.Inject;
 @ImpermanentEnterpriseDbmsExtension
 class PathFindingTest {
 
-    private static final String SETUP_GEO =
-            """
+    private static final String SETUP_GEO = """
                     CREATE (b:City {name:'Berlin', coords: point({latitude:52.52464,longitude:13.40514}), lat:52.52464,lon:13.40514})
                     CREATE (m:City {name:'München', coords: point({latitude:48.1374,longitude:11.5755, height: 1}), lat:48.1374,lon:11.5755})
                     CREATE (f:City {name:'Frankfurt',coords: point({latitude:50.1167,longitude:8.68333, height: 1}), lat:50.1167,lon:8.68333})
@@ -55,8 +54,7 @@ class PathFindingTest {
                     CREATE (f)-[:DIRECT {dist:304.28*1000}]->(m)
                     CREATE (f)-[:DIRECT {dist:393.15*1000}]->(h)""";
 
-    private static final String SETUP_MISSING_PROPERTY =
-            """
+    private static final String SETUP_MISSING_PROPERTY = """
             CREATE (a:Loc{name:'A'}), (b:Loc{name:'B'}), (c:Loc{name:'C'}), (d:Loc{name:'D'}),
             (a)-[:ROAD {d:100}]->(d),
             (a)-[:RAIL {d:5}]->(d),
@@ -65,8 +63,7 @@ class PathFindingTest {
             (c)-[:ROAD]->(d),
             (a)-[:ROAD {d:20}]->(c)""";
 
-    private static final String SETUP_SIMPLE =
-            """
+    private static final String SETUP_SIMPLE = """
             CREATE (a:Loc{name:'A'}), (b:Loc{name:'B'}), (c:Loc{name:'C'}), (d:Loc{name:'D'}),
             (a)-[:ROAD {d:100}]->(d),
             (a)-[:RAIL {d:5}]->(d),
@@ -91,110 +88,86 @@ class PathFindingTest {
     @Test
     void testAStar() {
         db.executeTransactionally(SETUP_GEO);
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:City {name:'München'}), (to:City {name:'Hamburg'})
                         CALL apoc.algo.aStar(from, to, 'DIRECT', 'dist', 'lat', 'lon')
                         YIELD path, weight
-                        RETURN path, weight""",
-                PathFindingTest::assertAStarResult);
+                        RETURN path, weight""", PathFindingTest::assertAStarResult);
     }
 
     @Test
     void testAStarConfig() {
         db.executeTransactionally(SETUP_GEO);
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:City {name:'München'}), (to:City {name:'Hamburg'})
                         CALL apoc.algo.aStarConfig(from, to, 'DIRECT', {weight:'dist',y:'lat', x:'lon',default:100})
                         YIELD path, weight
-                        RETURN path, weight""",
-                PathFindingTest::assertAStarResult);
+                        RETURN path, weight""", PathFindingTest::assertAStarResult);
     }
 
     @Test
     void testAStarConfigWithPoint() {
         db.executeTransactionally(SETUP_GEO);
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:City {name:'München'}), (to:City {name:'Hamburg'})
                         CALL apoc.algo.aStarConfig(from, to, 'DIRECT', {pointPropName:'coords', weight:'dist', default:100})
                         YIELD path, weight
-                        RETURN path, weight""",
-                PathFindingTest::assertAStarResult);
+                        RETURN path, weight""", PathFindingTest::assertAStarResult);
     }
 
     @Test
     void testDijkstra() {
         db.executeTransactionally(SETUP_SIMPLE);
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH (from:Loc{name:'A'}), (to:Loc{name:'D'})
                         CALL apoc.algo.dijkstra(from, to, 'ROAD>', 'd')
                         YIELD path, weight
-                        RETURN path, weight""",
-                row -> {
-                    assertEquals(50.0, row.get("weight"));
-                    assertEquals(2, ((Path) (row.get("path"))).length()); // 3nodes, 2 rels
-                });
-        testCall(
-                db,
-                """
+                        RETURN path, weight""", row -> {
+            assertEquals(50.0, row.get("weight"));
+            assertEquals(2, ((Path) (row.get("path"))).length()); // 3nodes, 2 rels
+        });
+        testCall(db, """
                         MATCH (from:Loc{name:'A'}), (to:Loc{name:'D'})
                         CALL apoc.algo.dijkstra(from, to, '', 'd')
                         YIELD path, weight
-                        RETURN path, weight""",
-                row -> {
-                    assertEquals(5.0, row.get("weight"));
-                    assertEquals(1, ((Path) (row.get("path"))).length()); // 2nodes, 1 rels
-                });
+                        RETURN path, weight""", row -> {
+            assertEquals(5.0, row.get("weight"));
+            assertEquals(1, ((Path) (row.get("path"))).length()); // 2nodes, 1 rels
+        });
     }
 
     @Test
     void testDijkstraMultipleShortest() {
         db.executeTransactionally(SETUP_SIMPLE);
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:Loc{name:'A'}), (to:Loc{name:'D'})
                         CALL apoc.algo.dijkstra(from, to, 'ROAD>', 'd', 99999, 3)
                         YIELD path, weight
-                        RETURN length(path) AS pathLength, weight ORDER BY weight""",
-                result -> {
-                    assertThat(result.stream())
-                            .containsExactly(
-                                    Map.of("weight", 50.0, "pathLength", 2L),
-                                    Map.of("weight", 60.0, "pathLength", 3L),
-                                    Map.of("weight", 100.0, "pathLength", 1L));
-                });
+                        RETURN length(path) AS pathLength, weight ORDER BY weight""", result -> {
+            assertThat(result.stream())
+                    .containsExactly(
+                            Map.of("weight", 50.0, "pathLength", 2L),
+                            Map.of("weight", 60.0, "pathLength", 3L),
+                            Map.of("weight", 100.0, "pathLength", 1L));
+        });
     }
 
     @Test
     void testDijkstraNoPath() {
         db.executeTransactionally("CREATE (:NoPath {name:'X'}), (:NoPath {name:'Y'})");
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:NoPath{name:'X'}), (to:NoPath{name:'Y'})
                         CALL apoc.algo.dijkstra(from, to, 'ROAD>', 'd') YIELD path, weight
-                        RETURN path, weight""",
-                result -> assertFalse(result.hasNext()));
+                        RETURN path, weight""", result -> assertFalse(result.hasNext()));
     }
 
     @Test
     void testDijkstraDefaultWeight() {
         db.executeTransactionally("CREATE (:DefW {name:'X'})-[:ROAD]->(:DefW {name:'Y'})");
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH (from:DefW{name:'X'}), (to:DefW{name:'Y'})
                         CALL apoc.algo.dijkstra(from, to, 'ROAD>', 'd', 7.0) YIELD path, weight
-                        RETURN weight""",
-                row -> assertEquals(7.0, row.get("weight")));
+                        RETURN weight""", row -> assertEquals(7.0, row.get("weight")));
     }
 
     @Test
@@ -223,36 +196,30 @@ class PathFindingTest {
     @Test
     void testAllSimplePathResults() {
         db.executeTransactionally(SETUP_MISSING_PROPERTY);
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:Loc{name:'A'}), (to:Loc{name:'D'})
                         CALL apoc.algo.allSimplePaths(from, to, 'ROAD>', 3)
                         YIELD path
-                        RETURN nodes(path) as nodes ORDER BY length(path)""",
-                res -> {
-                    List<?> nodes;
-                    nodes = (List<?>) res.next().get("nodes");
-                    assertEquals(2, nodes.size());
-                    nodes = (List<?>) res.next().get("nodes");
-                    assertEquals(3, nodes.size());
-                    nodes = (List<?>) res.next().get("nodes");
-                    assertEquals(4, nodes.size());
-                    assertFalse(res.hasNext());
-                });
+                        RETURN nodes(path) as nodes ORDER BY length(path)""", res -> {
+            List<?> nodes;
+            nodes = (List<?>) res.next().get("nodes");
+            assertEquals(2, nodes.size());
+            nodes = (List<?>) res.next().get("nodes");
+            assertEquals(3, nodes.size());
+            nodes = (List<?>) res.next().get("nodes");
+            assertEquals(4, nodes.size());
+            assertFalse(res.hasNext());
+        });
     }
 
     @Test
     void testAllSimplePathsNoPath() {
         db.executeTransactionally("CREATE (:NoSimple {name:'X'}), (:NoSimple {name:'Y'})");
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:NoSimple{name:'X'}), (to:NoSimple{name:'Y'})
                         CALL apoc.algo.allSimplePaths(from, to, 'ROAD>', 3)
                         YIELD path
-                        RETURN path""",
-                result -> assertFalse(result.hasNext()));
+                        RETURN path""", result -> assertFalse(result.hasNext()));
     }
 
     @Test
@@ -260,14 +227,11 @@ class PathFindingTest {
         // path A→B→C→D requires depth 3; maxNodes=2 should exclude it
         db.executeTransactionally(
                 "CREATE (:Depth {name:'A'})-[:ROAD]->(:Depth {name:'B'})-[:ROAD]->(:Depth {name:'C'})-[:ROAD]->(:Depth {name:'D'})");
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH (from:Depth{name:'A'}), (to:Depth{name:'D'})
                         CALL apoc.algo.allSimplePaths(from, to, 'ROAD>', 2)
                         YIELD path
-                        RETURN path""",
-                result -> assertFalse(result.hasNext()));
+                        RETURN path""", result -> assertFalse(result.hasNext()));
     }
 
     private static void assertAStarResult(Result r) {

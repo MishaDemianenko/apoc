@@ -191,9 +191,10 @@ class CypherTest {
                 "CREATE (m:Movie  {title:'MovieA'})<-[:ACTED_IN]-(p:Person {name:'PersonA'})-[:ACTED_IN]->(m2:Movie {title:'MovieB'}) RETURN m");
         String query =
                 "MATCH (m:Movie  {title:'MovieA'}) MATCH (m)<-[:ACTED_IN]-(:Person)-[:ACTED_IN]->(rec:Movie) RETURN rec LIMIT 10";
-        String plan =
-                db.executeTransactionally("EXPLAIN " + query, emptyMap(), result -> result.getExecutionPlanDescription()
-                        .toString());
+        String plan = db.executeTransactionally(
+                "EXPLAIN " + query,
+                emptyMap(),
+                result -> result.getExecutionPlanDescription().toString());
         System.out.println(plan);
         List<Node> recs = TestUtil.firstColumn(db, query);
         assertEquals(1, recs.size());
@@ -269,9 +270,10 @@ class CypherTest {
                 emptyMap(),
                 Result::resultAsString);
 
-        await().atMost(Duration.ofSeconds(10)).untilAsserted(() -> assertThat(logProvider.serialize())
-                .contains("markerTerminatedByTimebox")
-                .contains("has been terminated"));
+        await().atMost(Duration.ofSeconds(10))
+                .untilAsserted(() -> assertThat(logProvider.serialize())
+                        .contains("markerTerminatedByTimebox")
+                        .contains("has been terminated"));
     }
 
     @Test
@@ -727,8 +729,7 @@ class CypherTest {
 
         assertThatThrownBy(() -> {
                     try (final var tx = db.beginTx()) {
-                        final var q =
-                                """
+                        final var q = """
                     call apoc.cypher.runMany($q, {}) yield row, result
                     return row, result, 1 / (result.x - $x) as boom
                     """;
@@ -764,12 +765,10 @@ class CypherTest {
             for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
                 testCall(
                         db,
-                        String.format(
-                                """
+                        String.format("""
                                 %s
                                 CALL apoc.%s([true, '%s RETURN apoc.cypherVersion() AS version'])
-                                """,
-                                cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
+                                """, cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
                         r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
             }
         }
@@ -779,12 +778,10 @@ class CypherTest {
             for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
                 testCall(
                         db,
-                        String.format(
-                                """
+                        String.format("""
                                 %s
                                 CALL apoc.%s([false, 'RETURN 1 AS version'], '%s RETURN apoc.cypherVersion() AS version')
-                                """,
-                                cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
+                                """, cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
                         r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
             }
         }
@@ -797,12 +794,10 @@ class CypherTest {
             for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
                 testCall(
                         db,
-                        String.format(
-                                """
+                        String.format("""
                             %s
                             CALL apoc.%s(true, '%s RETURN apoc.cypherVersion() AS version', 'RETURN 1')
-                            """,
-                                cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
                         r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
             }
         }
@@ -812,12 +807,10 @@ class CypherTest {
             for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
                 testCall(
                         db,
-                        String.format(
-                                """
+                        String.format("""
                                 %s
                                 CALL apoc.%s(false, 'RETURN 1 AS version', '%s RETURN apoc.cypherVersion() AS version')
-                                """,
-                                cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
+                                """, cypherVersion.outerVersion, procName, cypherVersion.innerVersion),
                         r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
             }
         }
@@ -828,12 +821,10 @@ class CypherTest {
         for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
             testCall(
                     db,
-                    String.format(
-                            """
+                    String.format("""
                             %s
                             CALL apoc.cypher.doIt('%s RETURN apoc.cypherVersion() AS version', {})
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
         }
     }
@@ -843,12 +834,10 @@ class CypherTest {
         for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
             testCall(
                     db,
-                    String.format(
-                            """
+                    String.format("""
                             %s
                             CALL apoc.cypher.run('%s RETURN apoc.cypherVersion() AS version', {})
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
         }
     }
@@ -862,8 +851,7 @@ class CypherTest {
                             """
                             %s
                             CALL apoc.cypher.runMany('%s RETURN apoc.cypherVersion() AS version;\n %s RETURN apoc.cypherVersion() AS version;', {}, {statistics: false})
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
                     r -> {
                         assertTrue(r.hasNext());
                         Map<String, Object> row = r.next();
@@ -885,8 +873,7 @@ class CypherTest {
                             """
                             %s
                             CALL apoc.cypher.runManyReadOnly('%s RETURN apoc.cypherVersion() AS version;\n %s RETURN apoc.cypherVersion() AS version;', {}, {statistics: false})
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
                     r -> {
                         assertTrue(r.hasNext());
                         Map<String, Object> row = r.next();
@@ -908,8 +895,7 @@ class CypherTest {
                             """
                             %s
                             CALL apoc.cypher.runTimeboxed('%s RETURN apoc.cypherVersion() AS version;', {}, 100000)
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
         }
     }
@@ -923,8 +909,7 @@ class CypherTest {
                             """
                             %s
                             CALL apoc.cypher.runWrite('%s CREATE (n:Test {prop: apoc.cypherVersion()}) RETURN n.prop AS version;', {})
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(cypherVersion.result, ((Map<String, Object>) r.get("value")).get("version")));
         }
     }
@@ -938,8 +923,7 @@ class CypherTest {
                             """
                             %s
                             RETURN apoc.cypher.runFirstColumnSingle('%s RETURN apoc.cypherVersion() AS version', {}) AS value
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(cypherVersion.result, r.get("value")));
         }
     }
@@ -949,12 +933,10 @@ class CypherTest {
         for (HelperProcedures.CypherVersionCombinations cypherVersion : HelperProcedures.cypherVersions) {
             testCall(
                     db,
-                    String.format(
-                            """
+                    String.format("""
                             %s
                             RETURN apoc.cypher.runFirstColumnMany('%s UNWIND [1, 2] AS a RETURN apoc.cypherVersion() AS version', {}) AS value
-                            """,
-                            cypherVersion.outerVersion, cypherVersion.innerVersion),
+                            """, cypherVersion.outerVersion, cypherVersion.innerVersion),
                     r -> assertEquals(Arrays.asList(cypherVersion.result, cypherVersion.result), r.get("value")));
         }
     }

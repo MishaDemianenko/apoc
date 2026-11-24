@@ -198,17 +198,12 @@ public class GraphRefactoring {
                     + "It is possible to skip any `NODE` properties using the `skipProperties` `LIST<STRING>` via the config `MAP`.")
     public Stream<NodeRefactorResult> cloneSubgraphFromPaths(
             @Name(value = "paths", description = "The paths to be cloned.") List<Path> paths,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         standinNodes :: LIST<LIST<NODE>>,
                         skipProperties :: LIST<STRING>
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         failIfMvcc(db, "apoc.refactor.cloneSubgraphFromPaths");
 
         if (paths == null || paths.isEmpty()) return Stream.empty();
@@ -255,18 +250,13 @@ public class GraphRefactoring {
                             description =
                                     "The relationships to be cloned. If left empty all relationships between the given nodes will be cloned.")
                     List<Relationship> rels,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         standinNodes :: LIST<LIST<NODE>>,
                         skipProperties :: LIST<STRING>,
                         createNodesInNewTransactions = false :: BOOLEAN
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         failIfMvcc(db, "apoc.refactor.cloneSubgraph");
 
         if (nodes == null || nodes.isEmpty()) return Stream.empty();
@@ -369,7 +359,8 @@ public class GraphRefactoring {
         }
     }
 
-    public record MergedNodeResult(@Description("The merged node.") Node node) {}
+    public record MergedNodeResult(
+            @Description("The merged node.") Node node) {}
 
     /**
      * Merges the nodes onto the first node.
@@ -380,11 +371,7 @@ public class GraphRefactoring {
             + "All `RELATIONSHIP` values are merged onto that `NODE` as well.")
     public Stream<MergedNodeResult> mergeNodes(
             @Name(value = "nodes", description = "The nodes to be merged onto the first node.") List<Node> nodes,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         mergeRels :: BOOLEAN,
                         selfRef :: BOOLEAN,
@@ -397,8 +384,7 @@ public class GraphRefactoring {
                         relationshipSelectionStrategy = "incoming" :: ["incoming", "outgoing", "merge"]
                         properties :: ["overwrite", ""discard", "combine"]
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         failIfMvcc(db, "apoc.refactor.mergeNodes");
         if (nodes == null || nodes.isEmpty()) return Stream.empty();
         RefactorConfig conf = new RefactorConfig(config);
@@ -418,7 +404,8 @@ public class GraphRefactoring {
         return Stream.of(new MergedNodeResult(first));
     }
 
-    public record MergedRelationshipResult(@Description("The merged relationship.") Relationship rel) {}
+    public record MergedRelationshipResult(
+            @Description("The merged relationship.") Relationship rel) {}
 
     /**
      * Merges the relationships onto the first relationship and delete them.
@@ -429,11 +416,7 @@ public class GraphRefactoring {
     public Stream<MergedRelationshipResult> mergeRelationships(
             @Name(value = "rels", description = "The relationships to be merged onto the first relationship.")
                     List<Relationship> relationships,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         mergeRels :: BOOLEAN,
                         selfRef :: BOOLEAN,
@@ -446,8 +429,7 @@ public class GraphRefactoring {
                         relationshipSelectionStrategy = "incoming" :: ["incoming", "outgoing", "merge"]
                         properties :: ["overwrite", "discard", "combine"]
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         if (relationships == null || relationships.isEmpty()) return Stream.empty();
         Set<Relationship> relationshipsSet = new LinkedHashSet<>(relationships);
         RefactorConfig conf = new RefactorConfig(config);
@@ -507,16 +489,11 @@ public class GraphRefactoring {
     public Stream<UpdatedRelationshipResult> to(
             @Name(value = "rel", description = "The relationship to redirect.") Relationship rel,
             @Name(value = "endNode", description = "The new end node the relationship should point to.") Node newNode,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                 {
                     failOnErrors = false :: BOOLEAN
                 }
-                """)
-                    Map<String, Object> config) {
+                """) Map<String, Object> config) {
         if (config == null) config = Map.of();
         if (rel == null || newNode == null) return Stream.empty();
 
@@ -551,16 +528,11 @@ public class GraphRefactoring {
     @Description("Inverts the direction of the given `RELATIONSHIP`.")
     public Stream<RefactorRelationshipResult> invert(
             @Name(value = "rel", description = "The relationship to reverse.") Relationship rel,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         failOnErrors = false :: BOOLEAN
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         if (config == null) config = Map.of();
         if (rel == null) return Stream.empty();
 
@@ -600,16 +572,11 @@ public class GraphRefactoring {
     public Stream<RefactorRelationshipResult> from(
             @Name(value = "rel", description = "The relationship to redirect.") Relationship rel,
             @Name(value = "newNode", description = "The node to redirect the given relationship to.") Node newNode,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         failOnErrors = false :: BOOLEAN
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         if (config == null) config = Map.of();
         if (rel == null || newNode == null) return Stream.empty();
 
@@ -770,7 +737,9 @@ public class GraphRefactoring {
 
     public record RefactorGraphResult(
             @Description("The remaining nodes.") List<Node> nodes,
-            @Description("The new connecting relationships.") List<Relationship> relationships) {}
+
+            @Description("The new connecting relationships.")
+            List<Relationship> relationships) {}
 
     @Procedure(
             name = "apoc.refactor.deleteAndReconnect",
@@ -778,8 +747,7 @@ public class GraphRefactoring {
             deprecatedBy =
                     "Deprecated for removal without a direct replacement, use plain Cypher or create a custom procedure.")
     @Deprecated
-    @Description(
-            """
+    @Description("""
             Removes the given `NODE` values from the `PATH` (and graph, including all of its relationships) and reconnects the remaining `NODE` values.
             Note, undefined behaviour for paths that visits the same node multiple times.
             Note, nodes that are not connected in the same direction as the path will not be reconnected, for example `MATCH p=(:A)-->(b:B)<--(:C) CALL apoc.refactor.deleteAndReconnect(p, [b]) ...` will not reconnect the :A and :C nodes.""")
@@ -791,23 +759,17 @@ public class GraphRefactoring {
                                     "The path containing the nodes to delete and the remaining nodes to reconnect.")
                     Path path,
             @Name(value = "nodes", description = "The nodes to delete.") List<Node> nodesToRemove,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
             {
                 relationshipSelectionStrategy = "incoming" :: ["incoming", "outgoing", "merge"]
                 properties :: ["overwrite", "discard", "combine"]
             }
-            """)
-                    Map<String, Object> config) {
+            """) Map<String, Object> config) {
         return deleteAndReconnectCypher5(path, nodesToRemove, config);
     }
 
     @Procedure(name = "apoc.refactor.deleteAndReconnect", mode = Mode.WRITE)
-    @Description(
-            """
+    @Description("""
             Removes the given `NODE` values from the `PATH` (and graph, including all of its relationships) and reconnects the remaining `NODE` values.
             Note, undefined behaviour for paths that visits the same node multiple times.
             Note, nodes that are not connected in the same direction as the path will not be reconnected, for example `MATCH p=(:A)-->(b:B)<--(:C) CALL apoc.refactor.deleteAndReconnect(p, [b]) ...` will not reconnect the :A and :C nodes.""")
@@ -819,17 +781,12 @@ public class GraphRefactoring {
                                     "The path containing the nodes to delete and the remaining nodes to reconnect.")
                     Path path,
             @Name(value = "nodes", description = "The nodes to delete.") List<Node> nodesToRemove,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                         relationshipSelectionStrategy = "incoming" :: ["incoming", "outgoing", "merge"]
                         properties :: ["overwrite", "discard", "combine"]
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
 
         RefactorConfig refactorConfig = new RefactorConfig(config);
         List<Node> nodes = new ArrayList<>();

@@ -89,10 +89,7 @@ public class ExportGraphML {
                             value = "urlOrBinaryFile",
                             description = "The name of the file or binary data to import the data from.")
                     Object urlOrBinaryFile,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                         readLabels = false :: BOOLEAN,
                         defaultRelationshipType = "RELATED" :: STRING,
@@ -102,8 +99,7 @@ public class ExportGraphML {
                         source = {} :: MAP,
                         target = {} :: MAP
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         ImportProgressInfo result = Util.inThread(pools, () -> {
             ExportConfig exportConfig = new ExportConfig(config);
             String file = null;
@@ -140,10 +136,7 @@ public class ExportGraphML {
     public Stream<ExportProgressInfo> all(
             @Name(value = "file", description = "The name of the file to which the data will be exported.")
                     String fileName,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                             stream = false :: BOOLEAN,
                             format = 'cypher-shell' :: STRING,
@@ -155,8 +148,7 @@ public class ExportGraphML {
                             useTypes :: BOOLEAN,
                             caption :: LIST<STRING>
                     }
-                    """)
-                    Map<String, Object> config)
+                    """) Map<String, Object> config)
             throws Exception {
 
         String source = String.format("database: nodes(%d), rels(%d)", Util.nodeCount(tx), Util.relCount(tx));
@@ -170,10 +162,7 @@ public class ExportGraphML {
             @Name(value = "rels", description = "A list of relationships to export.") List<Relationship> rels,
             @Name(value = "file", description = "The name of the file to which the data will be exported.")
                     String fileName,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                             stream = false :: BOOLEAN,
                             format = 'cypher-shell' :: STRING,
@@ -185,8 +174,7 @@ public class ExportGraphML {
                             useTypes :: BOOLEAN,
                             caption :: LIST<STRING>
                     }
-                    """)
-                    Map<String, Object> config)
+                    """) Map<String, Object> config)
             throws Exception {
 
         String source = String.format("data: nodes(%d), rels(%d)", nodes.size(), rels.size());
@@ -200,10 +188,7 @@ public class ExportGraphML {
             @Name(value = "graph", description = "The graph to export.") Map<String, Object> graph,
             @Name(value = "file", description = "The name of the file to which the data will be exported.")
                     String fileName,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                             stream = false :: BOOLEAN,
                             format = 'cypher-shell' :: STRING,
@@ -215,8 +200,7 @@ public class ExportGraphML {
                             useTypes :: BOOLEAN,
                             caption :: LIST<STRING>
                     }
-                    """)
-                    Map<String, Object> config)
+                    """) Map<String, Object> config)
             throws Exception {
 
         Collection<Node> nodes = (Collection<Node>) graph.get("nodes");
@@ -234,10 +218,7 @@ public class ExportGraphML {
             @Name(value = "statement", description = "The query used to collect the data for export.") String query,
             @Name(value = "file", description = "The name of the file to which the data will be exported.")
                     String fileName,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                             stream = false :: BOOLEAN,
                             format = 'cypher-shell' :: STRING,
@@ -250,8 +231,7 @@ public class ExportGraphML {
                             caption :: LIST<STRING>,
                             nodesOfRelationships = false :: BOOLEAN
                     }
-                    """)
-                    Map<String, Object> config)
+                    """) Map<String, Object> config)
             throws Exception {
         ExportConfig c = new ExportConfig(config);
         Result result = tx.execute(Util.prefixQueryWithCheck(procedureCallContext, query));

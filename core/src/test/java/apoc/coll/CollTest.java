@@ -63,8 +63,7 @@ class CollTest {
 
     // query that procedures a list,
     // with both entity types, via collect(..), and hardcoded one
-    private static final String QUERY_WITH_MIXED_TYPES =
-            """
+    private static final String QUERY_WITH_MIXED_TYPES = """
             WITH COLLECT {
             MATCH (n:Test)
             RETURN {something: n.something}
@@ -677,9 +676,7 @@ class CollTest {
 
     @Test
     void testListsOnNodes() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE (:Test { a: 4, something: [1,2,3] })
                         WITH COLLECT {
                           MATCH (n:Test)
@@ -689,22 +686,19 @@ class CollTest {
                         CALL apoc.coll.elements(values)
                         YIELD elements, _1, _1l, _2,  _2l
                         RETURN *
-                """,
-                (row) -> {
-                    List<Long> list = asList(1L, 2L, 3L);
-                    assertEquals(2L, row.get("elements"));
-                    assertEquals(list, row.get("_1"));
-                    assertEquals(list, row.get("_1l"));
-                    assertEquals(list, row.get("_2"));
-                    assertEquals(list, row.get("_2l"));
-                });
+                """, (row) -> {
+            List<Long> list = asList(1L, 2L, 3L);
+            assertEquals(2L, row.get("elements"));
+            assertEquals(list, row.get("_1"));
+            assertEquals(list, row.get("_1l"));
+            assertEquals(list, row.get("_2"));
+            assertEquals(list, row.get("_2l"));
+        });
     }
 
     @Test
     void testListsOnRelationships() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE ()-[:TEST { a: 4, something: [1,2,3] }]->()
                         WITH COLLECT {
                           MATCH ()-[r:TEST]->()
@@ -714,15 +708,14 @@ class CollTest {
                         CALL apoc.coll.elements(values)
                         YIELD elements, _1, _1l, _2,  _2l
                         RETURN *
-                """,
-                (row) -> {
-                    List<Long> list = asList(1L, 2L, 3L);
-                    assertEquals(2L, row.get("elements"));
-                    assertEquals(list, row.get("_1"));
-                    assertEquals(list, row.get("_1l"));
-                    assertEquals(list, row.get("_2"));
-                    assertEquals(list, row.get("_2l"));
-                });
+                """, (row) -> {
+            List<Long> list = asList(1L, 2L, 3L);
+            assertEquals(2L, row.get("elements"));
+            assertEquals(list, row.get("_1"));
+            assertEquals(list, row.get("_1l"));
+            assertEquals(list, row.get("_2"));
+            assertEquals(list, row.get("_2l"));
+        });
     }
 
     @Test
@@ -1397,8 +1390,7 @@ class CollTest {
     @Test
     void testApocCollOccurrences() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                     MATCH (n:Test)
                     WITH n LIMIT 1
@@ -1411,8 +1403,7 @@ class CollTest {
     @Test
     void testApocCollContains() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                  MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1425,8 +1416,7 @@ class CollTest {
     @Test
     void testApocCollContainsDuplicates() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                  MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1439,8 +1429,7 @@ class CollTest {
     @Test
     void testApocCollDifferent() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                  MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1453,8 +1442,7 @@ class CollTest {
     @Test
     void testApocCollDropDuplicateNeighbors() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1467,8 +1455,7 @@ class CollTest {
     @Test
     void testApocCollDuplicates() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1481,8 +1468,7 @@ class CollTest {
     @Test
     void testApocCollDuplicatesWithCount() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1502,8 +1488,7 @@ class CollTest {
     @Test
     void testApocCollFrequencies() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1523,8 +1508,7 @@ class CollTest {
     @Test
     void testApocCollFrequenciesAsMap() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                     MATCH (n:Test)
                     WITH n LIMIT 1
@@ -1541,8 +1525,7 @@ class CollTest {
     @Test
     void testApocCollIsEqualCollection() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1555,8 +1538,7 @@ class CollTest {
     @Test
     void testApocCollIsEqualSubtract() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1569,8 +1551,7 @@ class CollTest {
     @Test
     void testApocCollIsEqualContainsAll() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1583,8 +1564,7 @@ class CollTest {
     @Test
     void testApocCollIsEqualToSet() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1597,8 +1577,7 @@ class CollTest {
     @Test
     void testApocCollUnion() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1611,8 +1590,7 @@ class CollTest {
     @Test
     void testApocCollIntersection() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1
@@ -1625,8 +1603,7 @@ class CollTest {
     @Test
     void testApocCollDisjunction() {
         db.executeTransactionally("CREATE (:Test {someArray: [true, false, true]})");
-        String query =
-                """
+        String query = """
                 WITH COLLECT {
                 MATCH (n:Test)
                 WITH n LIMIT 1

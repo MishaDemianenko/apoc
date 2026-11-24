@@ -3,7 +3,7 @@ plugins {
   id('com.gradleup.shadow') version '9.4.3'
   id("maven-publish")
   id("com.github.hierynomus.license-report") version "0.16.1"
-  id("com.diffplug.spotless") version "6.24.0"
+  id("com.diffplug.spotless") version "8.9.0"
 }
 
 ext {
@@ -76,7 +76,7 @@ allprojects {
     java {
       target 'src/*/java/**/*.java'
       removeUnusedImports()
-      palantirJavaFormat('2.50.0')
+      palantirJavaFormat("2.103.0")
     }
     groovyGradle {
       target '*.gradle'

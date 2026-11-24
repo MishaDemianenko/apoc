@@ -48,8 +48,7 @@ import org.neo4j.values.storable.Values;
 @ImpermanentEnterpriseDbmsExtension
 class SchemaIndexTest {
 
-    private static final String SCHEMA_DISTINCT_COUNT_ORDERED =
-            """
+    private static final String SCHEMA_DISTINCT_COUNT_ORDERED = """
             CALL apoc.schema.properties.distinctCount($label, $key)
             YIELD label, key, value, count
             RETURN * ORDER BY label, key, value""";
@@ -77,8 +76,7 @@ class SchemaIndexTest {
                 "CREATE (city:City {name:'London'}) WITH city UNWIND range(" + firstPerson + "," + lastPerson
                         + ") as id CREATE (:Person {name:'name'+id, id:id, age:id % 100, address:id+'Main St.'})-[:LIVES_IN]->(city)");
 
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CYPHER 25
                 CREATE (:FullTextOne {prop1: "Michael", prop2: 111}),
                     (:FullTextOne {prop1: "AA", prop2: 1}),
@@ -464,14 +462,11 @@ class SchemaIndexTest {
     public void testDistinctWithNoPreviousNodesShouldNotHangs() {
         db.executeTransactionally("CREATE INDEX LabelNotExistent FOR (n:LabelNotExistent) ON n.prop");
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE (:LabelNotExistent {prop:2})
                         WITH *
                         CALL apoc.schema.properties.distinct("LabelNotExistent", "prop")
-                        YIELD value RETURN *""",
-                r -> assertEquals(List.of(2L), r.get("value")));
+                        YIELD value RETURN *""", r -> assertEquals(List.of(2L), r.get("value")));
 
         db.executeTransactionally("DROP INDEX LabelNotExistent");
     }
@@ -554,13 +549,16 @@ class SchemaIndexTest {
 
             // Convert arrays to lists to be able to do equality checks
             switch (map.get("value")) {
-                case long[] array -> assertEquals(
-                        value, Arrays.stream(array).boxed().toList());
-                case double[] array -> assertEquals(
-                        value, Arrays.stream(array).boxed().toList());
-                case boolean[] array -> assertEquals(
-                        value,
-                        IntStream.range(0, array.length).mapToObj(i -> array[i]).toList());
+                case long[] array ->
+                    assertEquals(value, Arrays.stream(array).boxed().toList());
+                case double[] array ->
+                    assertEquals(value, Arrays.stream(array).boxed().toList());
+                case boolean[] array ->
+                    assertEquals(
+                            value,
+                            IntStream.range(0, array.length)
+                                    .mapToObj(i -> array[i])
+                                    .toList());
                 case Object[] array -> assertEquals(value, Arrays.stream(array).toList());
                 default -> assertEquals(value, map.get("value"));
             }
@@ -639,10 +637,12 @@ class SchemaIndexTest {
         for (Object o : actual) {
             switch (o) {
                 case long[] array -> actualSet.add(Arrays.stream(array).boxed().toList());
-                case double[] array -> actualSet.add(
-                        Arrays.stream(array).boxed().toList());
-                case boolean[] array -> actualSet.add(
-                        IntStream.range(0, array.length).mapToObj(i -> array[i]).toList());
+                case double[] array ->
+                    actualSet.add(Arrays.stream(array).boxed().toList());
+                case boolean[] array ->
+                    actualSet.add(IntStream.range(0, array.length)
+                            .mapToObj(i -> array[i])
+                            .toList());
                 case Object[] array -> actualSet.add(Arrays.stream(array).toList());
                 default -> actualSet.add(o);
             }

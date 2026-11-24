@@ -43,7 +43,8 @@ public class Cover {
     public Transaction tx;
 
     public record AlgoCoverRelationshipResult(
-            @Description("The relationships connected to the given nodes.") Relationship rel) {}
+            @Description("The relationships connected to the given nodes.")
+            Relationship rel) {}
 
     @Procedure("apoc.algo.cover")
     @QueryLanguageScope(scope = {QueryLanguage.CYPHER_5})
@@ -70,7 +71,8 @@ public class Cover {
     // non-parallelized utility method for use by other procedures
     public static Stream<Relationship> coverNodes(Collection<Node> nodes) {
         Set<Node> nodeSet = new HashSet<>(nodes);
-        return nodes.stream().flatMap(n -> Iterables.stream(n.getRelationships(Direction.OUTGOING))
-                .filter(r -> nodeSet.contains(r.getEndNode())));
+        return nodes.stream()
+                .flatMap(n -> Iterables.stream(n.getRelationships(Direction.OUTGOING))
+                        .filter(r -> nodeSet.contains(r.getEndNode())));
     }
 }

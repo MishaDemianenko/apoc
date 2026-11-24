@@ -80,13 +80,10 @@ class ExportArrowRBACTest {
                 "DENY MATCH {*} ON GRAPH neo4j RELATIONSHIPS PAID TO arrowRole");
         setup.forEach(q -> adminSession.run(q).consume());
 
-        adminSession
-                .run(
-                        """
+        adminSession.run("""
                         CREATE (p:Person {name: 'p'})-[:KNOWS {since: 1}]->(:Person {name: 'q'}),
                                (p)-[:PAID {secretRef: 'r'}]->(:Salary {amount: 1000, iban: 'XX00'})
-                        """)
-                .consume();
+                        """).consume();
 
         userDriver = GraphDatabase.driver(neo4jContainer.getBoltUrl(), AuthTokens.basic(USER, PASSWORD));
         userDriver.verifyConnectivity();

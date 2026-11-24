@@ -35,8 +35,7 @@ class MetaCommunityFeaturesTest extends AbstractDockerTestBase {
     void schema() {
         session.run("create (:A {a:1})-[:R {r:2}]->(:B {b:3})").consume();
         assertThatJson(session.run("call apoc.meta.schema()").list(Record::asMap))
-                .isEqualTo(
-                        """
+                .isEqualTo("""
                 [
                   {
                     "value": {

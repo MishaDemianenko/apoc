@@ -388,19 +388,16 @@ class TriggerEnterpriseFeaturesTest {
         }
 
         try (final var s = session(DEFAULT_DATABASE_NAME)) {
-            final var assertTriggerRanQuery =
-                    """
+            final var assertTriggerRanQuery = """
                        match (n:%s)
                        where n.created is null or n.created2 is null
-                       return n"""
-                            .formatted(CreateNodes.Label);
+                       return n""".formatted(CreateNodes.Label);
             final var size = s.run(assertTriggerRanQuery).stream().count();
             Assertions.assertEquals(0, size);
 
             final var totCountQuery = """
                        match (n:%s)
-                       return count(n)"""
-                    .formatted(CreateNodes.Label);
+                       return count(n)""".formatted(CreateNodes.Label);
             final var totCount = s.run(totCountQuery).stream().count();
             Assertions.assertTrue(totCount > 0);
         }

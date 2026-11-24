@@ -75,8 +75,7 @@ class ExportCypherMultiRelTest {
 
     @BeforeEach
     void beforeEach() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 create
                   (pers:Person {name: 'MyName'})-[:WORKS_FOR {id: 1}]->(proj:Project {a: 1}),
                   (pers)-[:WORKS_FOR {id: 2}]->(proj),

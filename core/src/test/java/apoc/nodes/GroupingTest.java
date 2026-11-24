@@ -157,8 +157,7 @@ class GroupingTest {
 
     @Test
     void testGroupWithDatetimes() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 UNWIND range(1, 1000) AS minutes
                 CREATE (f:Foo {
                     created_at: datetime({ year: 2019, month: 3, day: 23 }) - duration({minutes: minutes})
@@ -229,36 +228,24 @@ class GroupingTest {
         String expectedMax = testObject.expectedMax;
 
         // Create nodes in the database
-        db.executeTransactionally(String.format(
-                """
+        db.executeTransactionally(String.format("""
             UNWIND [%s] AS value
             CREATE (n:Test { testValue: value, groupKey: 1 })
-            """,
-                testValues));
+            """, testValues));
 
         // Test for minimum value
-        TestUtil.testCall(
-                db,
-                String.format(
-                        """
+        TestUtil.testCall(db, String.format("""
             CALL apoc.nodes.group(['Test'], ['groupKey'], [{ testValue: 'min' }]) YIELD node
             WITH apoc.any.property(node, 'min_testValue') AS result
             RETURN result = %s AS value, result
-            """,
-                        expectedMin),
-                (row) -> assertTrue((Boolean) row.get("value")));
+            """, expectedMin), (row) -> assertTrue((Boolean) row.get("value")));
 
         // Test for maximum value
-        TestUtil.testCall(
-                db,
-                String.format(
-                        """
+        TestUtil.testCall(db, String.format("""
             CALL apoc.nodes.group(['Test'], ['groupKey'], [{ testValue: 'max' }]) YIELD node
             WITH apoc.any.property(node, 'max_testValue') AS result
             RETURN result = %s AS value, result
-            """,
-                        expectedMax),
-                (row) -> assertTrue((Boolean) row.get("value")));
+            """, expectedMax), (row) -> assertTrue((Boolean) row.get("value")));
 
         // Delete nodes
         db.executeTransactionally("MATCH (n:Test) DELETE n");
@@ -267,8 +254,7 @@ class GroupingTest {
     @Test
     void testSumAndAvg() {
         // Create nodes in the database
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
             UNWIND [
                 [duration('P11DT16H12M'), 1, 3],
                 [duration('P1DT16H12M'), 2, duration('P1DT16H12M')],
@@ -277,30 +263,24 @@ class GroupingTest {
             """);
 
         // Test for sum value
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
             CALL apoc.nodes.group(['Test'], ['groupKey'], [{ durationValue: 'sum', intValue: 'sum' }]) YIELD node
             WITH apoc.any.property(node, 'sum_durationValue') AS sum_durationValue, apoc.any.property(node, 'sum_intValue') AS sum_intValue
             RETURN sum_durationValue, sum_intValue
-            """,
-                (row) -> {
-                    assertEquals(DurationValue.duration(0, 15, 189360, 0), row.get("sum_durationValue"));
-                    assertEquals(6L, row.get("sum_intValue"));
-                });
+            """, (row) -> {
+            assertEquals(DurationValue.duration(0, 15, 189360, 0), row.get("sum_durationValue"));
+            assertEquals(6L, row.get("sum_intValue"));
+        });
 
         // Test for avg value
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
             CALL apoc.nodes.group(['Test'], ['groupKey'], [{ durationValue: 'avg', intValue: 'avg' }]) YIELD node
             WITH apoc.any.property(node, 'avg_durationValue') AS avg_durationValue, apoc.any.property(node, 'avg_intValue') AS avg_intValue
             RETURN avg_durationValue, avg_intValue
-            """,
-                (row) -> {
-                    assertEquals(DurationValue.duration(0, 5, 126240, 0), row.get("avg_durationValue"));
-                    assertEquals(2.0, row.get("avg_intValue"));
-                });
+            """, (row) -> {
+            assertEquals(DurationValue.duration(0, 5, 126240, 0), row.get("avg_durationValue"));
+            assertEquals(2.0, row.get("avg_intValue"));
+        });
 
         // Delete nodes
         db.executeTransactionally("MATCH (n:Test) DELETE n");

@@ -470,8 +470,9 @@ class MapsTest {
     @Test
     void testRemoveKeysRecursiveExcessiveDepthIsRejected() {
         Map<String, Object> deep = deeplyNestedMap(100_000, "x");
-        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> new Maps()
-                .removeKeys(deep, List.of("a"), Map.<String, Object>of("recursive", true)));
+        IllegalArgumentException e = assertThrows(
+                IllegalArgumentException.class,
+                () -> new Maps().removeKeys(deep, List.of("a"), Map.<String, Object>of("recursive", true)));
         assertTrue(e.getMessage().contains("maximum nesting depth"), e.getMessage());
     }
 

@@ -88,8 +88,7 @@ class CloneSubgraphTest {
                 + "CREATE (rB)-[:LINK{id:'rB->n11'}]->(n11)");
     }
 
-    private static final String cloneWithEmptyRels =
-            """
+    private static final String cloneWithEmptyRels = """
                 MATCH (rootA:Root{name:'A'})
                 CALL apoc.path.subgraphAll(rootA, {}) YIELD nodes, relationships
                 WITH
@@ -116,8 +115,7 @@ class CloneSubgraphTest {
                   clonedRelsVerified
                 """;
 
-    private static final String cloneWithEmptyRelsMeta =
-            """
+    private static final String cloneWithEmptyRelsMeta = """
             CALL apoc.meta.stats() YIELD nodeCount, relCount, labels, relTypes as relTypesMap
             CALL db.relationshipTypes() YIELD relationshipType
             WITH nodeCount, relCount, labels, collect([relationshipType, relTypesMap['()-[:' + relationshipType + ']->()']]) as relationshipTypesColl
@@ -129,23 +127,27 @@ class CloneSubgraphTest {
                 final var res = tx.execute(cloneWithEmptyRels, Map.of("newTx", newTx))) {
             assertThat(res.stream())
                     .singleElement(InstanceOfAssertFactories.map(String.class, Object.class))
-                    .hasEntrySatisfying("cloneNames", n -> assertThat(n)
-                            .asInstanceOf(list(String.class))
-                            .containsExactlyInAnyOrder(
-                                    "node1", "node2", "node3", "node4", "node5", "node8", "node9", "node10", "node6",
-                                    "node7"))
-                    .hasEntrySatisfying("cloneRelNames", n -> assertThat(n)
-                            .asInstanceOf(list(String.class))
-                            .containsExactlyInAnyOrder(
-                                    "node1 LINK node5",
-                                    "node1 LINK node2",
-                                    "node2 LINK node3",
-                                    "node3 LINK node4",
-                                    "node5 LINK node6",
-                                    "node7 LINK node6",
-                                    "node5 LINK node8",
-                                    "node5 LINK node9",
-                                    "node9 DIFFERENT_LINK node10"))
+                    .hasEntrySatisfying(
+                            "cloneNames",
+                            n -> assertThat(n)
+                                    .asInstanceOf(list(String.class))
+                                    .containsExactlyInAnyOrder(
+                                            "node1", "node2", "node3", "node4", "node5", "node8", "node9", "node10",
+                                            "node6", "node7"))
+                    .hasEntrySatisfying(
+                            "cloneRelNames",
+                            n -> assertThat(n)
+                                    .asInstanceOf(list(String.class))
+                                    .containsExactlyInAnyOrder(
+                                            "node1 LINK node5",
+                                            "node1 LINK node2",
+                                            "node2 LINK node3",
+                                            "node3 LINK node4",
+                                            "node5 LINK node6",
+                                            "node7 LINK node6",
+                                            "node5 LINK node8",
+                                            "node5 LINK node9",
+                                            "node9 DIFFERENT_LINK node10"))
                     .containsEntry("clonedRelsVerified", true);
 
             if (commit) tx.commit();
@@ -476,8 +478,7 @@ class CloneSubgraphTest {
         try (final var tx = db.beginTx();
                 final var clean = tx.execute("MATCH (n) DETACH DELETE n");
                 final var create = tx.execute("CREATE (:A)-[:R{id:\"ID1\"}]->(:B)");
-                final var clone = tx.execute(
-                        """
+                final var clone = tx.execute("""
                 MATCH (n)-[r:R]->(oldB:B)
                 WITH oldB, COLLECT(DISTINCT n) AS nodes
                 CREATE (newB:B)

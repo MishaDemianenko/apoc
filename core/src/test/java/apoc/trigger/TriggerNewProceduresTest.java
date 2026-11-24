@@ -350,8 +350,7 @@ class TriggerNewProceduresTest {
         final long start = System.currentTimeMillis();
         db.executeTransactionally("CREATE (f:Another)");
         final String name = "txinfo";
-        final String query =
-                """
+        final String query = """
                 UNWIND $createdNodes AS n
                 MATCH (a:Another) WITH a, n
                 SET a.txId = $transactionId, a.txTime = $commitTime""";
@@ -374,8 +373,7 @@ class TriggerNewProceduresTest {
         String name = UUID.randomUUID().toString();
 
         // We need to filter $createdRelationships, i.e. `size(..) > 0`, not to cause a deadlock
-        String query =
-                """
+        String query = """
                  WITH size($createdRelationships) AS sizeRels
                  WHERE sizeRels > 0
                  MATCH (c:RelationshipCounter)
@@ -417,8 +415,7 @@ class TriggerNewProceduresTest {
     }
 
     private void testTxIdWithRelationshipsCommon(String phase) {
-        String query =
-                """
+        String query = """
                 MATCH (c:RelationshipCounter)
                   SET c.count = c.count + size($createdRelationships)
                   SET c.txId = $transactionId""";
@@ -570,8 +567,7 @@ class TriggerNewProceduresTest {
     void testCreatedRelationshipsAsync() {
         db.executeTransactionally("CREATE (:A {name: \"A\"})-[:R1]->(:Z {name: \"Z\"})");
         String name = "trigger-after-async";
-        final String query =
-                """
+        final String query = """
                 UNWIND $createdRelationships AS r
                 MATCH (a:A)-[r]->(z:Z)
                 WHERE type(r) IN ["R2", "R3"]
@@ -597,8 +593,7 @@ class TriggerNewProceduresTest {
         db.executeTransactionally(
                 "CREATE (a:A {name: \"A\"})-[:R1 {omega: 3}]->(z:Z {name: \"Z\"}), (a)-[:R2 {alpha: 1}]->(z)");
         String name = "trigger-after-async-1";
-        final String query =
-                """
+        final String query = """
                 UNWIND $deletedRelationships AS r
                 MATCH (a)-[r1:R1]->(z)
                 SET a.alpha = apoc.any.property(r, "alpha"), r1.triggerAfterAsync = size($deletedRelationships) > 0, r1.size = size($deletedRelationships), r1.deleted = type(r) RETURN *""";
@@ -616,8 +611,7 @@ class TriggerNewProceduresTest {
         db.executeTransactionally(
                 "CREATE (a:A {name: \"A\"})-[:R1 {omega: 3}]->(z:Z {name: \"Z\"}), (a)-[:R2 {alpha: 1}]->(z)");
         String name = "trigger-after-async-2";
-        final String query =
-                """
+        final String query = """
                 UNWIND $deletedRelationships AS r
                 MATCH (a)-[r1:R1]->(z)
                 SET a.alpha = apoc.any.property(r, "alpha"), r1.triggerAfterAsync = size($deletedRelationships) > 0, r1.size = size($deletedRelationships), r1.deleted = type(r) RETURN *""";
@@ -634,8 +628,7 @@ class TriggerNewProceduresTest {
         db.executeTransactionally(
                 "CREATE (a:A {name: 'A'})-[:R1 {omega: 3}]->(z:Z {name: 'Z'}), (:R2:Other {alpha: 1})");
         String name = "trigger-after-async-3";
-        final String query =
-                """
+        final String query = """
                 UNWIND $deletedNodes AS n
                 MATCH (a)-[r1:R1]->(z)
                 SET a.alpha = apoc.any.property(n, "alpha"), r1.triggerAfterAsync = size($deletedNodes) > 0, r1.size = size($deletedNodes), r1.deleted = "R2" RETURN *""";
@@ -653,8 +646,7 @@ class TriggerNewProceduresTest {
     void testDeleteNodesAsyncWithCreationQuery() {
         db.executeTransactionally("CREATE (:R2:Other {alpha: 1})");
         String name = "trigger-after-async-4";
-        final String query =
-                """
+        final String query = """
                 UNWIND $deletedNodes AS n
                 CREATE (a:A)-[r1:R1 {omega: 3}]->(z:Z)
                 SET a.alpha = 1, r1.triggerAfterAsync = size($deletedNodes) > 0, r1.size = size($deletedNodes), r1.deleted = apoc.node.labels(n)[0] RETURN *""";
@@ -684,8 +676,7 @@ class TriggerNewProceduresTest {
     void testDeleteRelationships() {
         db.executeTransactionally("CREATE (a:A {name: \"A\"})-[:R1]->(z:Z {name: \"Z\"}), (a)-[:R2]->(z)");
         String name = "trigger-after-async-3";
-        final String query =
-                """
+        final String query = """
                 UNWIND $deletedRelationships AS r
                 MERGE (a:AA{name: "AA"})
                 SET a.triggerAfter = size($deletedRelationships) = 1, a.deleted = type(r)""";
@@ -905,9 +896,7 @@ class TriggerNewProceduresTest {
                 futures.add(executor.submit(() -> db.executeTransactionally(
                         """
                             create (:A {id: $id + '.A'})-[:R {id: $id + '.R'}]->(:B {id: $id + '.B'})
-                            """,
-                        Map.of("id", String.valueOf(id)),
-                        r -> r.stream().toList())));
+                            """, Map.of("id", String.valueOf(id)), r -> r.stream().toList())));
             }
             executor.shutdown();
             executor.awaitTermination(15, TimeUnit.MINUTES);

@@ -186,9 +186,13 @@ class MaxAndMinItemsAggregationTest {
                         + "WITH apoc.agg.minItems(p, p.born, 2) as minResult "
                         + "RETURN minResult.value as born, [person in minResult.items | person.name] as persons",
                 (row) -> {
-                    assertThat(row).containsEntry("born", 1930L).hasEntrySatisfying("persons", p -> assertThat(p)
-                            .asInstanceOf(list(String.class))
-                            .containsAnyOf("Gene Hackman", "Richard Harris", "Clint Eastwood"));
+                    assertThat(row)
+                            .containsEntry("born", 1930L)
+                            .hasEntrySatisfying(
+                                    "persons",
+                                    p -> assertThat(p)
+                                            .asInstanceOf(list(String.class))
+                                            .containsAnyOf("Gene Hackman", "Richard Harris", "Clint Eastwood"));
                 });
     }
 

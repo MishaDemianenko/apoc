@@ -125,8 +125,11 @@ public class Exact {
         final BigDecimal a = new BigDecimal(stringA);
         final BigDecimal b = new BigDecimal(stringB);
         final MathContext mathContext = createMathContext(precision, roundingMode);
-        return chargeAndCompute(a, b, quotientLength(a, b, mathContext), () -> a.divide(b, mathContext)
-                .toPlainString());
+        return chargeAndCompute(
+                a,
+                b,
+                quotientLength(a, b, mathContext),
+                () -> a.divide(b, mathContext).toPlainString());
     }
 
     @UserFunction("apoc.number.exact.toInteger")

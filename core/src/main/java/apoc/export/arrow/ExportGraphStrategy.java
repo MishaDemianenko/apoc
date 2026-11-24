@@ -54,9 +54,10 @@ public interface ExportGraphStrategy {
         // Merge property types across all labels/types, so each property name maps to exactly one field.
         final ResultTransformer<Map<String, Set<String>>> parsePropertiesResult = result -> {
             final Map<String, Set<String>> types = new TreeMap<>();
-            result.stream().filter(m -> m.get("propertyName") != null).forEach(m -> types.computeIfAbsent(
-                            (String) m.get("propertyName"), k -> new HashSet<>())
-                    .addAll((List<String>) m.get("propertyTypes")));
+            result.stream()
+                    .filter(m -> m.get("propertyName") != null)
+                    .forEach(m -> types.computeIfAbsent((String) m.get("propertyName"), k -> new HashSet<>())
+                            .addAll((List<String>) m.get("propertyTypes")));
             return types;
         };
         final Map<String, Set<String>> propertyTypes = new TreeMap<>();

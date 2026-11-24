@@ -180,9 +180,10 @@ class SpatialTest {
 
     private void addEventData(Map<String, Object> event) {
         Map<String, Object> params = map("params", event);
-        int created =
-                db.executeTransactionally("CREATE (e:Event $params)", params, result -> result.getQueryStatistics()
-                        .getNodesCreated());
+        int created = db.executeTransactionally(
+                "CREATE (e:Event $params)",
+                params,
+                result -> result.getQueryStatistics().getNodesCreated());
         assertEquals(1, created);
         String name = event.get("name").toString();
         if (!event.containsKey("toofar")) {

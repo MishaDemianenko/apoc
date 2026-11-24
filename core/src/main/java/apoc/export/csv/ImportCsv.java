@@ -60,10 +60,7 @@ public class ImportCsv {
                             description =
                                     "List of map values specifying where to import relationship values from: { fileName :: STRING, data :: BYTEARRAY, type :: STRING }.")
                     List<Map<String, Object>> relationships,
-            @Name(
-                            value = "config",
-                            description =
-                                    """
+            @Name(value = "config", description = """
                     {
                         delimiter = "," :: STRING,
                         arrayDelimiter = ";" :: STRING,
@@ -77,8 +74,7 @@ public class ImportCsv {
                         charset = "UTF-8" :: STRING,
                         batchSize = 2000 :: INTEGER
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         ImportProgressInfo result = Util.inThread(pools, () -> {
             String file = "progress.csv";
             String source = "file";

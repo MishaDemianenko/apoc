@@ -78,233 +78,200 @@ class CreateTest {
 
     @Test
     void testCreateAddLabel() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n), (m), (o)
                         WITH n, m, o
                         CALL apoc.create.addLabels([id(n), m, elementId(o)], ['Foo', 'Bar'])
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testCreateSetLabel() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n:Baz), (m:Boo), (o:Bop)
                         WITH n, m, o
                         CALL apoc.create.setLabels([id(n), m, elementId(o)], ['Foo', 'Bar'])
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testCreateRemoveLabel() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n:Foo:Bar:Boo), (m:Foo:Bar:Boo), (o:Foo:Bar:Boo)
                         WITH n, m, o
                         CALL apoc.create.removeLabels([id(n), m, elementId(o)], ['Boo'])
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    row = result.next();
-                    assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            row = result.next();
+            assertEquals(List.of(label("Foo"), label("Bar")), ((Node) row.get("node")).getLabels());
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testSetProperty() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n), (m), (o)
                         WITH n, m, o
                         CALL apoc.create.setProperty([id(n), m, elementId(o)],'name','John')
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testRemoveProperty() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n:Foo {name:'foo'}), (m:Foo {name:'bar'}), (o:Foo {name:'baz'})
                         WITH n, m, o
                         CALL apoc.create.setProperty([n, id(m), elementId(o)],'name',null)
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    assertFalse(result.hasNext());
-                });
-        testResult(
-                db,
-                """
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            assertFalse(result.hasNext());
+        });
+        testResult(db, """
                         CREATE (n:Foo {name:'foo'}), (m:Foo {name:'bar'}), (o:Foo {name:'baz'})
                         WITH n, m, o
                         CALL apoc.create.removeProperties([n, id(m), elementId(o)],['name'])
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Node) row.get("node")).hasProperty("name"));
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Node) row.get("node")).hasProperty("name"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testRemoveRelProperty() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE ()-[r1:TEST {name:'foo'}]->(), ()-[r2:TEST {name:'bar'}]->(), ()-[r3:TEST {name:'baz'}]->()
                         WITH r1, r2, r3
                         CALL apoc.create.setRelProperty([r1, id(r2), elementId(r3)], 'name', null)
                         YIELD rel
-                        RETURN rel""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    assertFalse(result.hasNext());
-                });
-        testResult(
-                db,
-                """
+                        RETURN rel""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            assertFalse(result.hasNext());
+        });
+        testResult(db, """
                         CREATE ()-[r1:TEST {name:'foo'}]->(), ()-[r2:TEST {name:'bar'}]->(), ()-[r3:TEST {name:'baz'}]->()
                         WITH r1, r2, r3
                         CALL apoc.create.removeRelProperties([r1, id(r2), elementId(r3)], ['name'])
                         YIELD rel
-                        RETURN rel""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    row = result.next();
-                    assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
-                    assertFalse(result.hasNext());
-                });
+                        RETURN rel""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            row = result.next();
+            assertFalse(((Relationship) row.get("rel")).hasProperty("name"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testSetRelProperties() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE ()-[r:X]->(), ()-[r2:Y]->(), ()-[r3:Y]->()
                         WITH r, r2, r3
                         CALL apoc.create.setRelProperties([id(r), r2, elementId(r3)], ['name','age'], ['John',42])
                         YIELD rel
-                        RETURN rel""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    Relationship r = (Relationship) row.get("rel");
-                    assertEquals("John", r.getProperty("name"));
-                    assertEquals(42L, r.getProperty("age"));
-                    row = result.next();
-                    r = (Relationship) row.get("rel");
-                    assertEquals("John", r.getProperty("name"));
-                    assertEquals(42L, r.getProperty("age"));
-                    row = result.next();
-                    r = (Relationship) row.get("rel");
-                    assertEquals("John", r.getProperty("name"));
-                    assertEquals(42L, r.getProperty("age"));
-                    assertFalse(result.hasNext());
-                });
+                        RETURN rel""", (result) -> {
+            Map<String, Object> row = result.next();
+            Relationship r = (Relationship) row.get("rel");
+            assertEquals("John", r.getProperty("name"));
+            assertEquals(42L, r.getProperty("age"));
+            row = result.next();
+            r = (Relationship) row.get("rel");
+            assertEquals("John", r.getProperty("name"));
+            assertEquals(42L, r.getProperty("age"));
+            row = result.next();
+            r = (Relationship) row.get("rel");
+            assertEquals("John", r.getProperty("name"));
+            assertEquals(42L, r.getProperty("age"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testSetRelProperty() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n)-[r:X]->(m), (m)-[r2:Y]->(n), (m)-[r3:Z]->(n)
                         WITH r, r2, r3
                         CALL apoc.create.setRelProperty([id(r), r2, elementId(r3)], 'name', 'John')
-                        YIELD rel RETURN rel""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
-                    row = result.next();
-                    assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
-                    row = result.next();
-                    assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
-                    assertFalse(result.hasNext());
-                });
+                        YIELD rel RETURN rel""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
+            row = result.next();
+            assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
+            row = result.next();
+            assertEquals("John", ((Relationship) row.get("rel")).getProperty("name"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
     void testSetProperties() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n), (m), (o)
                         WITH n, m, o
                         CALL apoc.create.setProperties([id(n), m, elementId(o)], ['name','age'], ['John',42])
                         YIELD node
-                        RETURN node""",
-                (result) -> {
-                    Map<String, Object> row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
-                    row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
-                    row = result.next();
-                    assertEquals("John", ((Node) row.get("node")).getProperty("name"));
-                    assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
-                    assertFalse(result.hasNext());
-                });
+                        RETURN node""", (result) -> {
+            Map<String, Object> row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
+            row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
+            row = result.next();
+            assertEquals("John", ((Node) row.get("node")).getProperty("name"));
+            assertEquals(42L, ((Node) row.get("node")).getProperty("age"));
+            assertFalse(result.hasNext());
+        });
     }
 
     @Test
@@ -394,141 +361,121 @@ class CreateTest {
 
     @Test
     void testVirtualFromNodeFunction() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name']) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertTrue(node.getId() < 0);
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertTrue(node.getId() < 0);
+            assertEquals("Vincent", node.getProperty("name"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void test2VirtualFromNodesHaveUniqueIDs() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE (n1:Cat { name:'Maja', born: 2023 } ), (n2:Cat { name:'Pelle', born: 2023 } )
                         RETURN apoc.create.virtual.fromNode(n1, ['name']) AS node1, apoc.create.virtual.fromNode(n2, ['name']) AS node2
-                        """,
-                (row) -> {
-                    Node node1 = (Node) row.get("node1");
+                        """, (row) -> {
+            Node node1 = (Node) row.get("node1");
 
-                    assertTrue(node1.hasLabel(label("Cat")));
-                    var firstNodeID = node1.getId();
-                    assertTrue(node1.getId() < 0);
-                    assertEquals("Maja", node1.getProperty("name"));
-                    assertNull(node1.getProperty("born"));
+            assertTrue(node1.hasLabel(label("Cat")));
+            var firstNodeID = node1.getId();
+            assertTrue(node1.getId() < 0);
+            assertEquals("Maja", node1.getProperty("name"));
+            assertNull(node1.getProperty("born"));
 
-                    Node node2 = (Node) row.get("node2");
+            Node node2 = (Node) row.get("node2");
 
-                    assertTrue(node2.hasLabel(label("Cat")));
-                    var secondNodeID = node2.getId();
-                    assertTrue(node2.getId() < 0);
-                    assertEquals("Pelle", node2.getProperty("name"));
-                    assertNull(node2.getProperty("born"));
+            assertTrue(node2.hasLabel(label("Cat")));
+            var secondNodeID = node2.getId();
+            assertTrue(node2.getId() < 0);
+            assertEquals("Pelle", node2.getProperty("name"));
+            assertNull(node2.getProperty("born"));
 
-                    assertNotEquals(firstNodeID, secondNodeID);
-                });
+            assertNotEquals(firstNodeID, secondNodeID);
+        });
     }
 
     @Test
     void testVirtualFromSameNodesHaveUniqueIDs() {
-        testResult(
-                db,
-                """
+        testResult(db, """
                         CREATE (n1:Cat { name:'Maja', born: 2023 } )
                         WITH n1
                         UNWIND [1,2,3] AS i
                         RETURN apoc.create.virtual.fromNode(n1, ['name']) AS node1
-                        """,
-                (result) -> {
-                    HashSet<Long> nodeIDs = new HashSet<>();
-                    while (result.hasNext()) {
-                        Map<String, Object> r = result.next();
-                        Node node1 = (Node) r.get("node1");
+                        """, (result) -> {
+            HashSet<Long> nodeIDs = new HashSet<>();
+            while (result.hasNext()) {
+                Map<String, Object> r = result.next();
+                Node node1 = (Node) r.get("node1");
 
-                        assertTrue(node1.hasLabel(label("Cat")));
-                        nodeIDs.add(node1.getId());
-                        assertTrue(node1.getId() < 0);
-                        assertEquals("Maja", node1.getProperty("name"));
-                        assertNull(node1.getProperty("born"));
-                    }
+                assertTrue(node1.hasLabel(label("Cat")));
+                nodeIDs.add(node1.getId());
+                assertTrue(node1.getId() < 0);
+                assertEquals("Maja", node1.getProperty("name"));
+                assertNull(node1.getProperty("born"));
+            }
 
-                    assertEquals(3, nodeIDs.size());
-                });
+            assertEquals(3, nodeIDs.size());
+        });
     }
 
     @Test
     void testVirtualFromNodeFunctionWithWrapping() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { wrapNodeIds : true }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertTrue(node.getId() >= 0);
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertTrue(node.getId() >= 0);
+            assertEquals("Vincent", node.getProperty("name"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void testVirtualFromNodeWithAdditionalLabels() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalLabels: ['Suspect', 'Highlighted'] }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertTrue(node.hasLabel(label("Suspect")));
-                    assertTrue(node.hasLabel(label("Highlighted")));
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertTrue(node.hasLabel(label("Suspect")));
+            assertTrue(node.hasLabel(label("Highlighted")));
+            assertEquals("Vincent", node.getProperty("name"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void testVirtualFromNodeWithAdditionalProperties() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalProperties: { flagged: true, score: 42 } }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertEquals(true, node.getProperty("flagged"));
-                    assertEquals(42L, node.getProperty("score"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertEquals("Vincent", node.getProperty("name"));
+            assertEquals(true, node.getProperty("flagged"));
+            assertEquals(42L, node.getProperty("score"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void testVirtualFromNodeWithAdditionalLabelsAndProperties() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], {
@@ -536,82 +483,69 @@ class CreateTest {
                             additionalLabels: ['Fraud'],
                             additionalProperties: { risk: 'high' }
                         }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertTrue(node.hasLabel(label("Fraud")));
-                    assertTrue(node.getId() >= 0);
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertEquals("high", node.getProperty("risk"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertTrue(node.hasLabel(label("Fraud")));
+            assertTrue(node.getId() >= 0);
+            assertEquals("Vincent", node.getProperty("name"));
+            assertEquals("high", node.getProperty("risk"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void testVirtualFromNodeWithEmptyAdditionalLabelsAndProperties() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalLabels: [], additionalProperties: {} }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertTrue(node.hasLabel(label("Person")));
-                    assertEquals(1, Iterables.count(node.getLabels()));
-                    assertEquals("Vincent", node.getProperty("name"));
-                    assertNull(node.getProperty("born"));
-                });
+            assertTrue(node.hasLabel(label("Person")));
+            assertEquals(1, Iterables.count(node.getLabels()));
+            assertEquals("Vincent", node.getProperty("name"));
+            assertNull(node.getProperty("born"));
+        });
     }
 
     @Test
     void testVirtualFromNodeAdditionalPropertyOverwritesCopied() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent', born: 1974} )
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalProperties: { name: 'Override' } }) AS node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
 
-                    assertEquals("Override", node.getProperty("name"));
-                });
+            assertEquals("Override", node.getProperty("name"));
+        });
     }
 
     @Test
     void testVirtualFromNodeShouldNotEditOriginalOne() {
         db.executeTransactionally("CREATE (n:Person {name:'toUpdate'})");
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH (n:Person {name:'toUpdate'})
                         WITH apoc.create.virtual.fromNode(n, ['name']) as nVirtual
                         CALL apoc.create.setProperty(nVirtual, 'ajeje', 0) YIELD node RETURN node
-                        """,
-                (row) -> {
-                    Node node = (Node) row.get("node");
-                    assertEquals("toUpdate", node.getProperty("name"));
-                    assertEquals(0L, node.getProperty("ajeje"));
-                });
+                        """, (row) -> {
+            Node node = (Node) row.get("node");
+            assertEquals("toUpdate", node.getProperty("name"));
+            assertEquals(0L, node.getProperty("ajeje"));
+        });
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH (n:Person {name:'toUpdate'})
                         WITH apoc.create.virtual.fromNode(n, ['name']) as node
-                        SET node.ajeje = 0 RETURN node""",
-                (row) -> {
-                    Node node = (Node) row.get("node");
-                    assertEquals("toUpdate", node.getProperty("name"));
-                    assertFalse(node.hasProperty("ajeje"));
-                });
+                        SET node.ajeje = 0 RETURN node""", (row) -> {
+            Node node = (Node) row.get("node");
+            assertEquals("toUpdate", node.getProperty("name"));
+            assertFalse(node.hasProperty("ajeje"));
+        });
 
         testCall(db, "MATCH (node:Person {name:'toUpdate'}) RETURN node", (row) -> {
             Node node = (Node) row.get("node");
@@ -623,9 +557,7 @@ class CreateTest {
     @Test
     void testClonePathShouldNotEditOriginalOne() {
         db.executeTransactionally("CREATE (n:Person {name:'toUpdate'})-[:MY_REL]->(:Another {alpha: 0})");
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH p=(n:Person {name:'toUpdate'})-[:MY_REL]->(:Another {alpha: 0})
                         WITH p CALL apoc.create.clonePathToVirtual(p) YIELD path WITH nodes(path) AS nodes, relationships(path) as rels
                         WITH nodes[0] as start, nodes[1] as end, rels[0] as rel
@@ -636,41 +568,37 @@ class CreateTest {
                         CALL apoc.create.setRelProperty(rel, 'foo', 'bar') YIELD rel as relFirstSet
                         WITH startUpdated, endUpdated, relFirstSet
                         CALL apoc.create.setRelProperties(relFirstSet, ['baz'], ['bar']) YIELD rel as relUpdated
-                        RETURN startUpdated, endUpdated, relUpdated""",
-                (row) -> {
-                    Node start = (Node) row.get("startUpdated");
-                    assertEquals("toUpdate", start.getProperty("name"));
-                    assertEquals(0L, start.getProperty("ajeje"));
+                        RETURN startUpdated, endUpdated, relUpdated""", (row) -> {
+            Node start = (Node) row.get("startUpdated");
+            assertEquals("toUpdate", start.getProperty("name"));
+            assertEquals(0L, start.getProperty("ajeje"));
 
-                    Node end = (Node) row.get("endUpdated");
-                    assertEquals(0L, end.getProperty("alpha"));
-                    assertEquals("abc", end.getProperty("brazorf"));
+            Node end = (Node) row.get("endUpdated");
+            assertEquals(0L, end.getProperty("alpha"));
+            assertEquals("abc", end.getProperty("brazorf"));
 
-                    Relationship rel = (Relationship) row.get("relUpdated");
-                    assertEquals("bar", rel.getProperty("foo"));
-                    assertEquals("bar", rel.getProperty("baz"));
-                });
+            Relationship rel = (Relationship) row.get("relUpdated");
+            assertEquals("bar", rel.getProperty("foo"));
+            assertEquals("bar", rel.getProperty("baz"));
+        });
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         MATCH p=(n:Person {name:'toUpdate'})-[:MY_REL]->(:Another {alpha: 0})
                         WITH p CALL apoc.create.clonePathToVirtual(p) YIELD path WITH nodes(path) AS nodes, relationships(path) as rels
                         WITH nodes[0] as start, nodes[1] as end, rels[0] as rel
                         SET start.ajeje = 0, end.brazorf = 'abc', rel.foo = 'bar'
-                        RETURN start, end, rel""",
-                (row) -> {
-                    Node start = (Node) row.get("start");
-                    assertEquals("toUpdate", start.getProperty("name"));
-                    assertFalse(start.hasProperty("ajeje"));
-                    Node end = (Node) row.get("end");
-                    assertTrue(end.hasLabel(label("Another")));
-                    assertEquals(0L, end.getProperty("alpha"));
-                    assertFalse(end.hasProperty("brazorf"));
+                        RETURN start, end, rel""", (row) -> {
+            Node start = (Node) row.get("start");
+            assertEquals("toUpdate", start.getProperty("name"));
+            assertFalse(start.hasProperty("ajeje"));
+            Node end = (Node) row.get("end");
+            assertTrue(end.hasLabel(label("Another")));
+            assertEquals(0L, end.getProperty("alpha"));
+            assertFalse(end.hasProperty("brazorf"));
 
-                    Relationship rel = (Relationship) row.get("rel");
-                    assertFalse(rel.hasProperty("foo"));
-                });
+            Relationship rel = (Relationship) row.get("rel");
+            assertFalse(rel.hasProperty("foo"));
+        });
 
         testCall(db, "MATCH (start:Person {name:'toUpdate'}), (end:Another {alpha: 0})  RETURN start, end", (row) -> {
             Node start = (Node) row.get("start");
@@ -685,61 +613,54 @@ class CreateTest {
         // rel `:b` is to the left, rel `d` is to the right
         db.executeTransactionally("CREATE (:a {id: 1})<-[:b {id: 10}]-(:c {id: 2})-[:d {id: 20}]->(:e {id: 3})");
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                 MATCH p = (:a)<-[:b]-(:c)-[:d]->(:e)
-                CALL apoc.create.clonePathToVirtual(p) YIELD path RETURN path""",
-                r -> {
-                    Path path = (Path) r.get("path");
-                    Iterator<Node> nodes = path.nodes().iterator();
-                    Node node = nodes.next();
-                    assertEquals(Map.of("id", 1L), node.getAllProperties());
-                    node = nodes.next();
-                    assertEquals(Map.of("id", 2L), node.getAllProperties());
-                    node = nodes.next();
-                    assertEquals(Map.of("id", 3L), node.getAllProperties());
-                    assertFalse(nodes.hasNext());
+                CALL apoc.create.clonePathToVirtual(p) YIELD path RETURN path""", r -> {
+            Path path = (Path) r.get("path");
+            Iterator<Node> nodes = path.nodes().iterator();
+            Node node = nodes.next();
+            assertEquals(Map.of("id", 1L), node.getAllProperties());
+            node = nodes.next();
+            assertEquals(Map.of("id", 2L), node.getAllProperties());
+            node = nodes.next();
+            assertEquals(Map.of("id", 3L), node.getAllProperties());
+            assertFalse(nodes.hasNext());
 
-                    Iterator<Relationship> rels = path.relationships().iterator();
-                    Relationship rel = rels.next();
-                    assertEquals(Map.of("id", 10L), rel.getAllProperties());
-                    rel = rels.next();
-                    assertEquals(Map.of("id", 20L), rel.getAllProperties());
-                    assertFalse(rels.hasNext());
-                });
+            Iterator<Relationship> rels = path.relationships().iterator();
+            Relationship rel = rels.next();
+            assertEquals(Map.of("id", 10L), rel.getAllProperties());
+            rel = rels.next();
+            assertEquals(Map.of("id", 20L), rel.getAllProperties());
+            assertFalse(rels.hasNext());
+        });
     }
 
     @Test
     void testClonePathShouldNotDuplicateRelsWithMultipaths() {
         // create path with single rels
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (n1:Node {id: 1}),
                               (n2:Node),
                               (n3:Node),
                               (n1)-[:R]->(n2)-[:R]->(n3)""");
 
         // returns a list with all rels
-        testCall(
-                db,
-                """
+        testCall(db, """
                 MATCH p=(:Node {id: 1})-[:R*..2]->(:Node)
                 WITH collect(p) AS paths
                 CALL apoc.create.clonePathsToVirtual(paths)
                 YIELD path
                 WITH collect( relationships(path) ) as pathRels
-                RETURN apoc.coll.flatten(pathRels) as rels""",
-                r -> {
-                    final List<Relationship> rels = (List) r.get("rels");
-                    assertEquals(3, rels.size());
+                RETURN apoc.coll.flatten(pathRels) as rels""", r -> {
+            final List<Relationship> rels = (List) r.get("rels");
+            assertEquals(3, rels.size());
 
-                    // group the rels by id and check that there are not duplicated
-                    Map<String, List<Relationship>> relsById =
-                            rels.stream().collect(Collectors.groupingBy(Entity::getElementId));
+            // group the rels by id and check that there are not duplicated
+            Map<String, List<Relationship>> relsById =
+                    rels.stream().collect(Collectors.groupingBy(Entity::getElementId));
 
-                    assertEquals(2, relsById.size());
-                });
+            assertEquals(2, relsById.size());
+        });
     }
 
     @Test
@@ -753,34 +674,31 @@ class CreateTest {
                         + "CALL apoc.create.clonePathToVirtual(p) YIELD path RETURN path",
                 (row) -> assertionsFirstVirtualPath((Path) row.get("path")));
 
-        testResult(
-                db,
-                """
+        testResult(db, """
                         MATCH p=(a:Test {foo: 7})-[:TEST]->(b:Baa:Baz {a:'b'})<-[:TEST_2 {aa:'bb'}]-(:Bar {one:'www'}),\s
                         q=(:Omega {alpha: 'beta'})<-[:TEST_3 {aa:'ccc'}]-(:Bar {one:'jjj'}) WITH [p, q] as paths\s
-                        CALL apoc.create.clonePathsToVirtual(paths) YIELD path RETURN path""",
-                (res) -> {
-                    ResourceIterator<Path> paths = res.columnAs("path");
-                    Path firstPath = paths.next();
-                    assertionsFirstVirtualPath(firstPath);
-                    Path secondPath = paths.next();
-                    Iterator<Node> nodes = secondPath.nodes().iterator();
-                    Node firstNode = nodes.next();
-                    assertEquals(List.of(label("Omega")), firstNode.getLabels());
-                    assertEquals(Map.of("alpha", "beta"), firstNode.getAllProperties());
+                        CALL apoc.create.clonePathsToVirtual(paths) YIELD path RETURN path""", (res) -> {
+            ResourceIterator<Path> paths = res.columnAs("path");
+            Path firstPath = paths.next();
+            assertionsFirstVirtualPath(firstPath);
+            Path secondPath = paths.next();
+            Iterator<Node> nodes = secondPath.nodes().iterator();
+            Node firstNode = nodes.next();
+            assertEquals(List.of(label("Omega")), firstNode.getLabels());
+            assertEquals(Map.of("alpha", "beta"), firstNode.getAllProperties());
 
-                    Node secondNode = nodes.next();
-                    assertEquals(List.of(label("Bar")), secondNode.getLabels());
-                    assertEquals(Map.of("one", "jjj"), secondNode.getAllProperties());
-                    assertFalse(nodes.hasNext());
+            Node secondNode = nodes.next();
+            assertEquals(List.of(label("Bar")), secondNode.getLabels());
+            assertEquals(Map.of("one", "jjj"), secondNode.getAllProperties());
+            assertFalse(nodes.hasNext());
 
-                    Iterator<Relationship> rels = secondPath.relationships().iterator();
-                    Relationship relationship = rels.next();
-                    assertEquals("TEST_3", relationship.getType().name());
-                    assertEquals(Map.of("aa", "ccc"), relationship.getAllProperties());
-                    assertFalse(rels.hasNext());
-                    assertFalse(paths.hasNext());
-                });
+            Iterator<Relationship> rels = secondPath.relationships().iterator();
+            Relationship relationship = rels.next();
+            assertEquals("TEST_3", relationship.getType().name());
+            assertEquals(Map.of("aa", "ccc"), relationship.getAllProperties());
+            assertFalse(rels.hasNext());
+            assertFalse(paths.hasNext());
+        });
     }
 
     private void assertionsFirstVirtualPath(Path path) {
@@ -811,9 +729,7 @@ class CreateTest {
 
     @Test
     void testVirtualFromNodeWithInvalidAdditionalLabelsType() {
-        assertionsError(
-                "additionalLabels must be a LIST<STRING>, but was: String",
-                """
+        assertionsError("additionalLabels must be a LIST<STRING>, but was: String", """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent'})
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalLabels: 'notAList' }) AS node
@@ -822,9 +738,7 @@ class CreateTest {
 
     @Test
     void testVirtualFromNodeWithInvalidAdditionalPropertiesType() {
-        assertionsError(
-                "additionalProperties must be a MAP, but was: String",
-                """
+        assertionsError("additionalProperties must be a MAP, but was: String", """
                         CYPHER 25
                         CREATE (n:Person{name:'Vincent'})
                         RETURN apoc.create.virtual.fromNode(n, ['name'], { additionalProperties: 'notAMap' }) AS node

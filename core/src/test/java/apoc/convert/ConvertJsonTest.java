@@ -292,17 +292,13 @@ public class ConvertJsonTest {
 
     @Test
     void testToJsonRel() {
-        final var query =
-                """
+        final var query = """
                 CREATE (f:User {name:'Adam'})-[rel:KNOWS {since: 1993.1, bffSince: duration('P5M1.5D')}]->(b:User {name:'Jim',age:42})
                 RETURN apoc.convert.toJson(rel) as value
                 """;
         try (final var tx = db.beginTx()) {
             assertThat(tx.execute(query).columnAs("value").stream())
-                    .satisfiesExactly(
-                            value -> assertThatJson(value)
-                                    .isEqualTo(
-                                            """
+                    .satisfiesExactly(value -> assertThatJson(value).isEqualTo("""
                                 {
                                   "id": "${json-unit.any-string}",
                                   "type": "relationship",
@@ -327,17 +323,13 @@ public class ConvertJsonTest {
 
     @Test
     void testToJsonPath() {
-        final var query =
-                """
+        final var query = """
                 CREATE p=(a:Test {foo: 7})-[:TEST]->(b:Baz {a:'b'})<-[:TEST_2 {aa:'bb'}]-(:Bar {one:'www', two:2, three: localdatetime('2020-01-01')})
                 RETURN apoc.convert.toJson(p) AS value
                 """;
         try (final var tx = db.beginTx()) {
             assertThat(tx.execute(query).columnAs("value").stream())
-                    .satisfiesExactly(
-                            value -> assertThatJson(value)
-                                    .isEqualTo(
-                                            """
+                    .satisfiesExactly(value -> assertThatJson(value).isEqualTo("""
                                 [
                                   {
                                     "id": "${json-unit.any-string}",
@@ -407,16 +399,12 @@ public class ConvertJsonTest {
 
     @Test
     void testToJsonListOfPath() {
-        final var query =
-                """
+        final var query = """
                 CREATE p=(a:Test {foo: 7})-[:TEST]->(b:Baa:Baz {a:'b'}), q=(:Omega {alpha: 'beta'})<-[:TEST_2 {aa:'bb'}]-(:Bar {one:'www'})
                 WITH collect(p) AS collectP, q RETURN apoc.convert.toJson(collectP+q) AS value""";
         try (final var tx = db.beginTx()) {
             assertThat(tx.execute(query).columnAs("value").stream())
-                    .satisfiesExactly(
-                            value -> assertThatJson(value)
-                                    .isEqualTo(
-                                            """
+                    .satisfiesExactly(value -> assertThatJson(value).isEqualTo("""
                          [
                            [
                              {
@@ -547,29 +535,25 @@ public class ConvertJsonTest {
         String movies = Util.readResourceFile("movies.cypher");
         db.executeTransactionally(movies);
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 5
                         MATCH path = (k:Person {name:'Keanu Reeves'})-[*..5]-(x)
                         WITH collect(path) AS paths
                         CALL apoc.convert.toTree(paths)
                         YIELD value
-                        RETURN value""",
-                (row) -> {
-                    Map<?, ?> root = (Map<?, ?>) row.get("value");
-                    assertEquals("Person", root.get("_type"));
-                    List<Object> actedInList = (List<Object>) root.get("acted_in");
-                    assertEquals(7, actedInList.size());
-                    List<Object> innerList = (List) ((Map<String, Object>) actedInList.get(1)).get("acted_in");
-                    assertEquals(9, ((Map<String, Object>) innerList.get(0)).size());
-                });
+                        RETURN value""", (row) -> {
+            Map<?, ?> root = (Map<?, ?>) row.get("value");
+            assertEquals("Person", root.get("_type"));
+            List<Object> actedInList = (List<Object>) root.get("acted_in");
+            assertEquals(7, actedInList.size());
+            List<Object> innerList = (List) ((Map<String, Object>) actedInList.get(1)).get("acted_in");
+            assertEquals(9, ((Map<String, Object>) innerList.get(0)).size());
+        });
     }
 
     @Test
     void testToTreeIssue2190() {
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE (root:TreeNode {name:'root'})
                 CREATE (c0:TreeNode {name: 'c0'})
                 CREATE (c1:TreeNode {name: 'c1'})
@@ -586,9 +570,7 @@ public class ConvertJsonTest {
                 CREATE (c1)-[:CHILD {order: 0}]->(c10)
                 CREATE (c10)-[:CHILD {order: 0}]->(c100)""");
 
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 5
                         MATCH(root:TreeNode) WHERE root.name = "root"
                         MATCH path = (root)-[cl:CHILD*]->(c:TreeNode)
@@ -596,57 +578,48 @@ public class ConvertJsonTest {
                         ORDER BY orders
                         WITH COLLECT(path) AS paths
                         CALL apoc.convert.toTree(paths, true, {sortPaths: false}) YIELD value AS tree
-                        RETURN tree""",
-                (row) -> {
-                    Map tree = (Map) row.get("tree");
-                    final List<Map> child = (List<Map>) tree.get("child");
-                    final Object firstChildName = child.get(0).get("name");
-                    assertEquals("c0", firstChildName);
-                });
+                        RETURN tree""", (row) -> {
+            Map tree = (Map) row.get("tree");
+            final List<Map> child = (List<Map>) tree.get("child");
+            final Object firstChildName = child.get(0).get("name");
+            assertEquals("c0", firstChildName);
+        });
 
         db.executeTransactionally("MATCH (n:TreeNode) DETACH DELETE n");
     }
 
     @Test
     void testToTree() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                          CYPHER 5 CREATE p1=(m:Movie {title:'M'})<-[:ACTED_IN {role:'R1'}]-(:Actor {name:'A1'}),
                          p2 = (m)<-[:ACTED_IN  {role:'R2'}]-(:Actor {name:'A2'}) WITH [p1,p2] as paths
                          CALL apoc.convert.toTree(paths) YIELD value RETURN value
-                        """,
-                (row) -> {
-                    Map root = (Map) row.get("value");
-                    assertEquals("Movie", root.get("_type"));
-                    assertEquals("M", root.get("title"));
-                    List<Map> actors = (List<Map>) root.get("acted_in");
-                    assertEquals("Actor", actors.get(0).get("_type"));
-                    assertEquals(true, actors.get(0).get("name").toString().matches("A[12]"));
-                    assertEquals(
-                            true, actors.get(0).get("acted_in.role").toString().matches("R[12]"));
-                });
+                        """, (row) -> {
+            Map root = (Map) row.get("value");
+            assertEquals("Movie", root.get("_type"));
+            assertEquals("M", root.get("title"));
+            List<Map> actors = (List<Map>) root.get("acted_in");
+            assertEquals("Actor", actors.get(0).get("_type"));
+            assertEquals(true, actors.get(0).get("name").toString().matches("A[12]"));
+            assertEquals(true, actors.get(0).get("acted_in.role").toString().matches("R[12]"));
+        });
     }
 
     @Test
     void testToTreeUpperCaseRels() {
-        testCall(
-                db,
-                """
+        testCall(db, """
                         CYPHER 5
                         CREATE p1=(m:Movie {title:'M'})<-[:ACTED_IN {role:'R1'}]-(:Actor {name:'A1'}),
                         p2 = (m)<-[:ACTED_IN  {role:'R2'}]-(:Actor {name:'A2'}) WITH [p1,p2] as paths
-                        CALL apoc.convert.toTree(paths,false) YIELD value RETURN value""",
-                (row) -> {
-                    Map root = (Map) row.get("value");
-                    assertEquals("Movie", root.get("_type"));
-                    assertEquals("M", root.get("title"));
-                    List<Map> actors = (List<Map>) root.get("ACTED_IN");
-                    assertEquals("Actor", actors.get(0).get("_type"));
-                    assertEquals(true, actors.get(0).get("name").toString().matches("A[12]"));
-                    assertEquals(
-                            true, actors.get(0).get("ACTED_IN.role").toString().matches("R[12]"));
-                });
+                        CALL apoc.convert.toTree(paths,false) YIELD value RETURN value""", (row) -> {
+            Map root = (Map) row.get("value");
+            assertEquals("Movie", root.get("_type"));
+            assertEquals("M", root.get("title"));
+            List<Map> actors = (List<Map>) root.get("ACTED_IN");
+            assertEquals("Actor", actors.get(0).get("_type"));
+            assertEquals(true, actors.get(0).get("name").toString().matches("A[12]"));
+            assertEquals(true, actors.get(0).get("ACTED_IN.role").toString().matches("R[12]"));
+        });
     }
 
     @Test
@@ -659,16 +632,14 @@ public class ConvertJsonTest {
 
     @Test
     void testToTreeLeafNodes() {
-        String createStatement =
-                """
+        String createStatement = """
                 CREATE
                 (c1:Category {name: 'PC'}),
                 (c1)-[:subcategory {id:1}]->(c2:Category {name: 'Parts'}),
                 (c2)-[:subcategory {id:2}]->(c3:Category {name: 'CPU'})""";
         db.executeTransactionally(createStatement);
 
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -711,8 +682,7 @@ public class ConvertJsonTest {
 
     @Test
     void testToTreeParentNodes() {
-        String createDatabase =
-                """
+        String createDatabase = """
                         CREATE (b:Bib {id: '57523a6f-fda9-4a61-c4f6-08d47cdcf0cd', langId: 2})-[:HAS {id: "rel1"}]->(c:Comm {id: 'a34fd608-1751-0b5d-cb38-6991297fa9c9', langId: 2}),
                         (b)-[:HAS {id: "rel2"}]->(c1:Comm {id: 'a34fd608-262b-678a-cb38-6991297fa9c8', langId: 2}),
                         (u:User {id: 'facebook|680594762097202'})-[:Flag  {id: "rel3", Created: '2018-11-21T11:22:01', FlagType: 4}]->(c1),
@@ -721,8 +691,7 @@ public class ConvertJsonTest {
                         (u1)-[:Flag {id: "rel6", Created: '2018-11-21T11:20:31', FlagType: 1}]->(c1)""";
         db.executeTransactionally(createDatabase);
 
-        String call =
-                """
+        String call = """
                         CYPHER 5
                         MATCH (parent:Bib {id: '57523a6f-fda9-4a61-c4f6-08d47cdcf0cd'})
                         WITH parent
@@ -734,8 +703,7 @@ public class ConvertJsonTest {
         try (final var tx = db.beginTx()) {
             assertThatJson(tx.execute(call).stream().toList())
                     .when(Option.IGNORING_ARRAY_ORDER)
-                    .isEqualTo(
-                            """
+                    .isEqualTo("""
                                     [
                                       {
                                         "value": {
@@ -824,8 +792,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigInclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -856,8 +823,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigExclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -888,8 +854,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigExcludeInclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -920,8 +885,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigOnlyInclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -952,8 +916,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigErrorInclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -971,8 +934,7 @@ public class ConvertJsonTest {
 
     @Test
     void testToTreeDoesNotRemoveNonDuplicateRels() {
-        String createStatement =
-                """
+        String createStatement = """
             CREATE (v1:N {id: 'n21', name: 'Node 21', p2: 'node21'})
             CREATE (v2:N {id: 'n22', name: 'Node 22', p2: 'node22'})
             CREATE (v1)-[:R {prop1: 'n21->n22 [1]', prop2: 'Rel 1'}]->(v2)
@@ -980,8 +942,7 @@ public class ConvertJsonTest {
 
         db.executeTransactionally(createStatement);
 
-        String query =
-                """
+        String query = """
                 CYPHER 5
                 MATCH p1 = (n:N {id:'n21'})-[e1]->(m1:N)
                 WITH  COLLECT(p1) as paths
@@ -1016,8 +977,7 @@ public class ConvertJsonTest {
     @Test
     void testToTreeLeafNodesWithConfigErrorExclude() {
         statementForConfig(db);
-        String call =
-                """
+        String call = """
                 CYPHER 5
                 MATCH p=(n:Category)-[:subcategory*]->(m)
                 WHERE NOT (m)-[:subcategory]->() AND NOT ()-[:subcategory]->(n)
@@ -1034,8 +994,7 @@ public class ConvertJsonTest {
     }
 
     private static void statementForConfig(GraphDatabaseService db) {
-        String createStatement =
-                """
+        String createStatement = """
                 CREATE
                 (c1:Category {name: 'PC', surname: 'computer'}),
                 (c1)-[:subcategory {id:1, subCat: 'gen'}]->(c2:Category {name: 'Parts'}),

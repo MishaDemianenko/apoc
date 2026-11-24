@@ -153,8 +153,7 @@ class SubgraphTest {
 
     @Test
     void testSubgraphAllShouldContainExpectedNodesAndRels() {
-        String controlQuery =
-                """
+        String controlQuery = """
 				MATCH path = (:Person {name: 'Keanu Reeves'})-[*0..3]-(subgraphNode)
 				WITH collect(DISTINCT subgraphNode) AS subgraph
 				CALL apoc.algo.cover([node in subgraph | elementId(node)])
@@ -170,8 +169,7 @@ class SubgraphTest {
             relationships = (List<RelationshipResult>) row.get("relationships");
         }
 
-        String query =
-                """
+        String query = """
 				MATCH (k:Person {name: 'Keanu Reeves'})
 				CALL apoc.path.subgraphAll(k, {maxLevel:3})
 				YIELD nodes, relationships
@@ -218,58 +216,48 @@ class SubgraphTest {
 
     @Test
     void testSubgraphNodesWorksWithAllowList() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (allowlist:Movie)
 						WHERE allowlist.title = "The Matrix"
 						WITH k, collect(allowlist) AS allowlistNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', allowlistNodes: allowlistNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
     void testSubgraphNodesWithDifferentNodeInputs() {
         List<String> nodeRepresentations = List.of("k", "id(k)", "elementId(k)", "[k]", "[id(k)]", "[elementId(k)]");
         for (String nodeRep : nodeRepresentations) {
-            TestUtil.testResult(
-                    db,
-                    String.format(
-                            """
+            TestUtil.testResult(db, String.format("""
 							MATCH (k:Person {name:'Keanu Reeves'})
 							MATCH (allowlist:Movie)
 							WHERE allowlist.title = "The Matrix"
 							WITH k, collect(allowlist) AS allowlistNodes
 							CALL apoc.path.subgraphAll(%s, {relationshipFilter:'ACTED_IN', allowlistNodes: allowlistNodes})
 							YIELD nodes UNWIND nodes as node
-							RETURN node""",
-                            nodeRep),
-                    result -> {
-                        List<Map<String, Object>> maps = Iterators.asList(result);
-                        assertEquals(2, maps.size());
-                        Node node1 = (Node) maps.get(0).get("node");
-                        assertEquals("Keanu Reeves", node1.getProperty("name"));
-                        Node node2 = (Node) maps.get(1).get("node");
-                        assertEquals("The Matrix", node2.getProperty("title"));
-                    });
+							RETURN node""", nodeRep), result -> {
+                List<Map<String, Object>> maps = Iterators.asList(result);
+                assertEquals(2, maps.size());
+                Node node1 = (Node) maps.get(0).get("node");
+                assertEquals("Keanu Reeves", node1.getProperty("name"));
+                Node node2 = (Node) maps.get(1).get("node");
+                assertEquals("The Matrix", node2.getProperty("title"));
+            });
         }
     }
 
     @Test
     void testSubgraphAllAllowListTakesPriority() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (allowlist:Movie)
 						WHERE allowlist.title = "The Matrix"
@@ -278,66 +266,57 @@ class SubgraphTest {
 						WITH k, collect(allowlist) AS allowlistNodes, collect(allowlistDeprecated) AS allowlistDeprecatedNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', allowlistNodes: allowlistNodes, whitelistNodes: allowlistDeprecatedNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
     void testSubgraphAllWorksWithDeprecatedAllowList() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (allowlist:Movie)
 						WHERE allowlist.title = "The Matrix"
 						WITH k, collect(allowlist) AS allowlistNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', whitelistNodes: allowlistNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
     void testSubgraphAllWorksWithDenyList() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (denylist:Movie)
 						WHERE denylist.title <> "The Matrix"
 						WITH k, collect(denylist) AS denylistNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', labelFilter: 'Movie', denylistNodes: denylistNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
     void testSubgraphAllDenyListTakesPriority() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (denylist:Movie)
 						WHERE denylist.title <> "The Matrix"
@@ -346,37 +325,33 @@ class SubgraphTest {
 						WITH k, collect(denylist) AS denylistNodes, collect(denylistDeprecated) AS denylistDeprecatedNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', labelFilter: 'Movie', denylistNodes: denylistNodes, blacklistNodes: denylistDeprecatedNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
     void testSubgraphAllWorksWithDeprecatedDenyList() {
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
 						MATCH (k:Person {name:'Keanu Reeves'})
 						MATCH (denylist:Movie)
 						WHERE denylist.title <> "The Matrix"
 						WITH k, collect(denylist) AS denylistNodes
 						CALL apoc.path.subgraphAll(k, {relationshipFilter:'ACTED_IN', labelFilter: 'Movie', blacklistNodes: denylistNodes})
 						YIELD nodes UNWIND nodes as node
-						RETURN node""",
-                result -> {
-                    List<Map<String, Object>> maps = Iterators.asList(result);
-                    assertEquals(2, maps.size());
-                    Node node1 = (Node) maps.get(0).get("node");
-                    assertEquals("Keanu Reeves", node1.getProperty("name"));
-                    Node node2 = (Node) maps.get(1).get("node");
-                    assertEquals("The Matrix", node2.getProperty("title"));
-                });
+						RETURN node""", result -> {
+            List<Map<String, Object>> maps = Iterators.asList(result);
+            assertEquals(2, maps.size());
+            Node node1 = (Node) maps.get(0).get("node");
+            assertEquals("Keanu Reeves", node1.getProperty("name"));
+            Node node2 = (Node) maps.get(1).get("node");
+            assertEquals("The Matrix", node2.getProperty("title"));
+        });
     }
 
     @Test
@@ -398,8 +373,7 @@ class SubgraphTest {
             tx.commit();
         }
 
-        String query =
-                """
+        String query = """
                 MATCH (n:Person)
                 WHERE n.id IN $ids
                 CALL apoc.path.subgraphAll(n, {maxLevel: 3, limit: 100, relationshipFilter: $relationshipFilter})
@@ -568,42 +542,32 @@ class SubgraphTest {
 
     @Test
     void testSpanningTreeWithAllowList() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (allowlist:Person)
 				WHERE allowlist.name IN ["Keanu Reeves", "Laurence Fishburne"]
 				WITH m, collect(allowlist) AS allowlistNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, allowlistNodes: allowlistNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(2L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(2L, row.get("cnt")));
     }
 
     @Test
     void testSpanningTreeWithDifferentNodeInputs() {
         List<String> nodeRepresentations = List.of("m", "id(m)", "elementId(m)", "[m]", "[id(m)]", "[elementId(m)]");
         for (String nodeRep : nodeRepresentations) {
-            TestUtil.testCall(
-                    db,
-                    String.format(
-                            """
+            TestUtil.testCall(db, String.format("""
 							MATCH (m:Movie {title: 'The Matrix'})
 							MATCH (allowlist:Person)
 							WHERE allowlist.name IN ["Keanu Reeves", "Laurence Fishburne"]
 							WITH m, collect(allowlist) AS allowlistNodes
 							CALL apoc.path.spanningTree(%s,{minLevel:1, maxLevel: 3, allowlistNodes: allowlistNodes})
-							YIELD path RETURN count(distinct path) as cnt""",
-                            nodeRep),
-                    (row) -> assertEquals(2L, row.get("cnt")));
+							YIELD path RETURN count(distinct path) as cnt""", nodeRep), (row) -> assertEquals(2L, row.get("cnt")));
         }
     }
 
     @Test
     void testSpanningTreeWithAllowListTakesPriority() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (allowlist:Person)
 				WHERE allowlist.name IN ["Keanu Reeves", "Laurence Fishburne"]
@@ -611,43 +575,34 @@ class SubgraphTest {
 				WHERE allowlistDeprecated.name IN ["Keanu Reeves"]
 				WITH m, collect(allowlist) AS allowlistNodes, collect(allowlistDeprecated) AS allowlistDeprecatedNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, allowlistNodes: allowlistNodes, whitelistNodes: allowlistDeprecatedNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(2L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(2L, row.get("cnt")));
     }
 
     @Test
     void testSpanningTreeWithDeprecatedAllowListStillWorks() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (allowlist:Person)
 				WHERE allowlist.name IN ["Keanu Reeves", "Laurence Fishburne"]
 				WITH m, collect(allowlist) AS allowlistNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, whitelistNodes: allowlistNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(2L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(2L, row.get("cnt")));
     }
 
     @Test
     void testSpanningTreeWithDenyList() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (denylist:Person)
 				WHERE denylist.name IN ["Keanu Reeves", "Laurence Fishburne"]
 				WITH m, collect(denylist) AS denylistNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, denylistNodes: denylistNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(136L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(136L, row.get("cnt")));
     }
 
     @Test
     void testSpanningTreeWithDenyListTakesPriority() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (denylist:Person)
 				WHERE denylist.name IN ["Keanu Reeves", "Laurence Fishburne"]
@@ -655,22 +610,18 @@ class SubgraphTest {
 				WHERE denylistDeprecated.name IN ["Keanu Reeves"]
 				WITH m, collect(denylist) AS denylistNodes, collect(denylistDeprecated) AS denylistDeprecatedNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, denylistNodes: denylistNodes, blacklistNodes: denylistDeprecatedNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(136L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(136L, row.get("cnt")));
     }
 
     @Test
     void testSpanningTreeWithDeprecatedDenyListStillWorks() {
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
 				MATCH (m:Movie {title: 'The Matrix'})
 				MATCH (denylist:Person)
 				WHERE denylist.name IN ["Keanu Reeves", "Laurence Fishburne"]
 				WITH m, collect(denylist) AS denylistNodes
 				CALL apoc.path.spanningTree(m,{minLevel:1, maxLevel: 3, blacklistNodes: denylistNodes})
-				YIELD path RETURN count(distinct path) as cnt""",
-                (row) -> assertEquals(136L, row.get("cnt")));
+				YIELD path RETURN count(distinct path) as cnt""", (row) -> assertEquals(136L, row.get("cnt")));
     }
 
     public class RootCauseMatcher<T> extends TypeSafeMatcher<Throwable> {

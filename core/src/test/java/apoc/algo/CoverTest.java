@@ -50,18 +50,13 @@ class CoverTest {
         db.executeTransactionally("CREATE (a)-[:X]->(b)-[:X]->(c)-[:X]->(d)");
         List<String> nodeRepresentations = List.of("n", "id(n)", "elementId(n)");
         for (String nodeRep : nodeRepresentations) {
-            TestUtil.testCall(
-                    db,
-                    String.format(
-                            """
+            TestUtil.testCall(db, String.format("""
                             MATCH (n)
                             WITH collect(%s) AS nodes
                             CALL apoc.algo.cover(nodes)
                             YIELD rel
                             RETURN count(*) AS c
-                        """,
-                            nodeRep),
-                    (r) -> assertEquals(3L, r.get("c")));
+                        """, nodeRep), (r) -> assertEquals(3L, r.get("c")));
         }
     }
 
@@ -74,76 +69,61 @@ class CoverTest {
     @Test
     void testCoverSingleNode() {
         db.executeTransactionally("CREATE (:Single)");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                     MATCH (n:Single)
                     WITH collect(n) AS nodes
                     CALL apoc.algo.cover(nodes)
                     YIELD rel
                     RETURN count(*) AS c
-                """,
-                r -> assertEquals(0L, r.get("c")));
+                """, r -> assertEquals(0L, r.get("c")));
     }
 
     @Test
     void testCoverDisconnectedNodes() {
         db.executeTransactionally("CREATE (:Disco), (:Disco)");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                         MATCH (n:Disco)
                         WITH collect(n) AS nodes
                         CALL apoc.algo.cover(nodes)
                         YIELD rel
                         RETURN count(*) AS c
-                    """,
-                r -> assertEquals(0L, r.get("c")));
+                    """, r -> assertEquals(0L, r.get("c")));
     }
 
     @Test
     void testCoverSelfLoop() {
         db.executeTransactionally("CREATE (a:SelfLoop)-[:X]->(a)");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                         MATCH (n:SelfLoop)
                         WITH collect(n) AS nodes
                         CALL apoc.algo.cover(nodes)
                         YIELD rel RETURN count(*) AS c
-                    """,
-                r -> assertEquals(1L, r.get("c")));
+                    """, r -> assertEquals(1L, r.get("c")));
     }
 
     @Test
     void testCoverMultipleRelTypes() {
         db.executeTransactionally("CREATE (a:Multi)-[:X]->(b:Multi)-[:Y]->(c:Multi)");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                         MATCH (n:Multi)
                         WITH collect(n) AS nodes
                         CALL apoc.algo.cover(nodes)
                         YIELD rel
                         RETURN count(*) AS c
-                    """,
-                r -> assertEquals(2L, r.get("c")));
+                    """, r -> assertEquals(2L, r.get("c")));
     }
 
     @Test
     void testCoverIncomingRelationship() {
         // relationship points a<-b; cover finds it via b's outgoing rels when both nodes are in the set
         db.executeTransactionally("CREATE (a:Incoming)<-[:X]-(b:Incoming)");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                     MATCH (n:Incoming)
                     WITH collect(n) AS nodes
                     CALL apoc.algo.cover(nodes)
                     YIELD rel
                     RETURN count(*) AS c
-                   """,
-                r -> assertEquals(1L, r.get("c")));
+                   """, r -> assertEquals(1L, r.get("c")));
     }
 
     @Test
@@ -152,33 +132,27 @@ class CoverTest {
         // stream while a relationship cursor is mid-iteration. Before the fix this leaked the cursor and the
         // commit failed with "Not all allocated cursors were returned".
         db.executeTransactionally("CREATE (h:Hub) FOREACH (i IN range(1, 20) | CREATE (h)-[:X]->(:Leaf))");
-        TestUtil.testResult(
-                db,
-                """
+        TestUtil.testResult(db, """
                 MATCH (n)
                 WITH collect(n) AS nodes
                 CALL apoc.algo.cover(nodes)
                 YIELD rel
                 RETURN rel
                 LIMIT 1
-                """,
-                result -> assertEquals(1L, result.stream().count()));
+                """, result -> assertEquals(1L, result.stream().count()));
     }
 
     @Test
     void testCoverSubset() {
         // chain of 3; passing only the first two nodes should return only the relationship between them
         db.executeTransactionally("CREATE (:Sub {id: 1})-[:X]->(:Sub {id: 2})-[:X]->(:Sub {id: 3})");
-        TestUtil.testCall(
-                db,
-                """
+        TestUtil.testCall(db, """
                     MATCH (n:Sub)
                     WHERE n.id IN [1, 2]
                     WITH collect(n) AS nodes
                     CALL apoc.algo.cover(nodes)
                     YIELD rel
                     RETURN count(*) AS c
-                """,
-                r -> assertEquals(1L, r.get("c")));
+                """, r -> assertEquals(1L, r.get("c")));
     }
 }

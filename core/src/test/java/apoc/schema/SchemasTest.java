@@ -144,8 +144,7 @@ public class SchemasTest {
     @Test
     void testDropIndexDoesntAffectVectorIndexes() {
         db.executeTransactionally("CREATE INDEX FOR (n:Foo) ON (n.bar)");
-        db.executeTransactionally(
-                """
+        db.executeTransactionally("""
                 CREATE VECTOR INDEX moviePlots IF NOT EXISTS
                 FOR (m:Movie)
                 ON m.embedding

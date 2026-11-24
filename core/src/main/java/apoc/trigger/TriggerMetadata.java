@@ -139,9 +139,11 @@ public class TriggerMetadata {
     private static <T extends Entity> Map<String, List<PropertyEntryContainer<T>>> rebindPropsEntries(
             TransactionData txData, Map<String, List<PropertyEntryContainer<T>>> removedNodeProperties) {
         return removedNodeProperties.entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream()
-                        .map(entry -> entry.copy((T) toVirtualEntity(txData, entry.entity)))
-                        .collect(Collectors.toList())));
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e -> e.getValue().stream()
+                                .map(entry -> entry.copy((T) toVirtualEntity(txData, entry.entity)))
+                                .collect(Collectors.toList())));
     }
 
     private static <T extends Entity> List<T> rebindDeleted(List<T> entities, TransactionData txData) {
@@ -205,9 +207,10 @@ public class TriggerMetadata {
 
     private <T extends Entity> Map<String, List<PropertyEntryContainer<T>>> rebindPropertyEntryContainer(
             Map<String, List<PropertyEntryContainer<T>>> map, Transaction tx) {
-        return map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().stream()
-                .map(p -> p.rebind(tx))
-                .collect(Collectors.toList())));
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> e.getValue().stream().map(p -> p.rebind(tx)).collect(Collectors.toList())));
     }
 
     private <T extends Entity> Map<String, List<T>> rebindMap(Map<String, List<T>> map, Transaction tx) {
@@ -216,9 +219,12 @@ public class TriggerMetadata {
 
     private <T extends Entity> Map<String, List<Map<String, Object>>> convertMapOfPropertyEntryContainers(
             Map<String, List<PropertyEntryContainer<T>>> map) {
-        return map.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().stream()
-                .map(PropertyEntryContainer::toMap)
-                .collect(Collectors.toList())));
+        return map.entrySet().stream()
+                .collect(Collectors.toMap(
+                        e -> e.getKey(),
+                        e -> e.getValue().stream()
+                                .map(PropertyEntryContainer::toMap)
+                                .collect(Collectors.toList())));
     }
 
     public Map<String, Object> toMap() {

@@ -104,16 +104,13 @@ class BackgroundTransactionRBACTest {
     @BeforeEach
     void resetData() {
         adminSession.run("MATCH (n) DETACH DELETE n").consume();
-        adminSession
-                .run(
-                        """
+        adminSession.run("""
                         CREATE (a1:Admin {name: 'a1', oldProp: 1, cat: 'c1'}),
                                (a2:Admin {name: 'a2', oldProp: 2, cat: 'c2'}),
                                (u:User {name: 'u'}),
                                (a1)-[:KNOWS {oldProp: 1}]->(u),
                                (a2)-[:KNOWS {oldProp: 2}]->(u)
-                        """)
-                .consume();
+                        """).consume();
     }
 
     private long count(String query) {
@@ -145,9 +142,11 @@ class BackgroundTransactionRBACTest {
 
     @Test
     void controlPlainCypherIsDenied() {
-        assertThrows(Exception.class, () -> userSession
-                .run("MATCH (n:Admin) REMOVE n:Admin SET n:Disabled")
-                .consume());
+        assertThrows(
+                Exception.class,
+                () -> userSession
+                        .run("MATCH (n:Admin) REMOVE n:Admin SET n:Disabled")
+                        .consume());
         assertThrows(
                 Exception.class,
                 () -> userSession.run("MATCH (n:User) DETACH DELETE n").consume());
@@ -182,18 +181,22 @@ class BackgroundTransactionRBACTest {
 
     @Test
     void nodesDelete() {
-        assertThrows(Exception.class, () -> userSession
-                .run(
-                        "MATCH (u:User) WITH collect(u) AS users CALL apoc.nodes.delete(users, 1000) YIELD value RETURN value")
-                .consume());
+        assertThrows(
+                Exception.class,
+                () -> userSession
+                        .run(
+                                "MATCH (u:User) WITH collect(u) AS users CALL apoc.nodes.delete(users, 1000) YIELD value RETURN value")
+                        .consume());
         assertGraphUntouched();
     }
 
     @Test
     void categorize() {
-        assertThrows(Exception.class, () -> userSession
-                .run("CALL apoc.refactor.categorize('cat', 'IN_CATEGORY', true, 'Category', 'name', [], 100)")
-                .consume());
+        assertThrows(
+                Exception.class,
+                () -> userSession
+                        .run("CALL apoc.refactor.categorize('cat', 'IN_CATEGORY', true, 'Category', 'name', [], 100)")
+                        .consume());
         assertGraphUntouched();
         assertEquals(0L, count("MATCH ()-[r:IN_CATEGORY]->() RETURN count(r) AS c"));
     }

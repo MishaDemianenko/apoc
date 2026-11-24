@@ -150,7 +150,8 @@ public class TriggerNewProcedures {
         checkNotMvcc(databaseName, "apoc.trigger.dropAll");
 
         return withUpdatingTransaction(
-                databaseName, tx -> TriggerHandlerNewProcedures.dropAll(db, databaseName, tx).stream()
+                databaseName,
+                tx -> TriggerHandlerNewProcedures.dropAll(db, databaseName, tx).stream()
                         .sorted(Comparator.comparing(i -> i.name)));
     }
 

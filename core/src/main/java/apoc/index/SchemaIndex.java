@@ -44,7 +44,8 @@ public class SchemaIndex {
     public Transaction tx;
 
     public record SchemaListResult(
-            @Description("The list of distinct values for the given property.") List<Object> value) {}
+            @Description("The list of distinct values for the given property.")
+            List<Object> value) {}
 
     @NotThreadSafe
     @Procedure("apoc.schema.properties.distinct")
@@ -85,8 +86,7 @@ public class SchemaIndex {
         String query;
 
         if (labelName.isEmpty() && keyName.isEmpty()) {
-            query =
-                    """
+            query = """
                     WITH COLLECT { CALL db.labels() YIELD label RETURN label } AS labels,
                       COLLECT { CALL db.propertyKeys() YIELD propertyKey AS propertyKey } AS keys
                     UNWIND labels AS label
@@ -97,8 +97,7 @@ public class SchemaIndex {
                     RETURN uniqueLabel AS label, uniqueKey AS key, n[uniqueKey] AS value, count(n[uniqueKey]) AS count
                     """;
         } else if (labelName.isEmpty()) {
-            query =
-                    """
+            query = """
                     WITH COLLECT { CALL db.labels() YIELD label RETURN label } AS labels
                     UNWIND labels AS label
                     WITH DISTINCT label AS uniqueLabel
@@ -107,8 +106,7 @@ public class SchemaIndex {
                     RETURN uniqueLabel AS label, $key AS key, n[$key] AS value, count(n[$key]) AS count
                     """;
         } else if (keyName.isEmpty()) {
-            query =
-                    """
+            query = """
                     WITH COLLECT { CALL db.propertyKeys() YIELD propertyKey AS propertyKey } AS keys
                     UNWIND keys AS key
                     WITH DISTINCT key AS uniqueKey
@@ -117,8 +115,7 @@ public class SchemaIndex {
                     RETURN $label AS label, uniqueKey AS key, n[uniqueKey] AS value, count(n[uniqueKey]) AS count
                     """;
         } else {
-            query =
-                    """
+            query = """
                     MATCH (n :$($label))
                     WHERE n[$key] IS NOT NULL
                     RETURN $label AS label, $key AS key, n[$key] AS value, count(n[$key]) AS count

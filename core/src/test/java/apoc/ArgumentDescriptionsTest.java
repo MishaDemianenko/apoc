@@ -267,8 +267,7 @@ class ArgumentDescriptionsTest {
 
     private JsonNode showProcedures(CypherVersion version) {
         final var opts = version != null ? "CYPHER " + version : "";
-        final var query =
-                """
+        final var query = """
                   CYPHER %s
                   SHOW PROCEDURES YIELD
                   name, description, signature, argumentDescription,
@@ -276,8 +275,7 @@ class ArgumentDescriptionsTest {
                   WHERE name STARTS WITH 'apoc'
                   RETURN *
                   ORDER BY name
-                """
-                        .formatted(opts);
+                """.formatted(opts);
         final var result =
                 db.executeTransactionally(query, Map.of(), r -> r.stream().toList());
         return json.valueToTree(result);
@@ -285,8 +283,7 @@ class ArgumentDescriptionsTest {
 
     private JsonNode showFunctions(CypherVersion version) {
         final var opts = version != null ? "CYPHER " + version : "";
-        final var query =
-                """
+        final var query = """
                   CYPHER %s
                   SHOW FUNCTIONS YIELD
                   name, category, description, signature, isBuiltIn,
@@ -295,8 +292,7 @@ class ArgumentDescriptionsTest {
                   WHERE name STARTS WITH 'apoc'
                   RETURN *
                   ORDER BY name
-                """
-                        .formatted(opts);
+                """.formatted(opts);
         final var result =
                 db.executeTransactionally(query, Map.of(), r -> r.stream().toList());
         return json.valueToTree(result);

@@ -155,11 +155,7 @@ public class Graphs {
             "Generates a virtual sub-graph by extracting all of the `NODE` and `RELATIONSHIP` values from the data returned by the given JSON file.")
     public Stream<VirtualGraph> fromDocument(
             @Name(value = "json", description = "A JSON object to generate a graph from.") Object document,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                             write = false :: BOOLEAN,
                             labelField = 'type' :: STRING.
@@ -169,8 +165,7 @@ public class Graphs {
                             skipValidation = false :: BOOLEAN,
                             mappings = {} :: MAP
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         DocumentToGraph documentToGraph = new DocumentToGraph(tx, new GraphsConfig(config));
         return Stream.of(documentToGraph.create(document));
     }
@@ -179,11 +174,7 @@ public class Graphs {
     @Description("Validates the JSON file and returns the result of the validation.")
     public Stream<RowResult> validateDocument(
             @Name(value = "json", description = "The JSON object to validate.") Object document,
-            @Name(
-                            value = "config",
-                            defaultValue = "{}",
-                            description =
-                                    """
+            @Name(value = "config", defaultValue = "{}", description = """
                     {
                             write = false :: BOOLEAN,
                             labelField = 'type' :: STRING.
@@ -193,8 +184,7 @@ public class Graphs {
                             skipValidation = false :: BOOLEAN,
                             mappings = {} :: MAP
                     }
-                    """)
-                    Map<String, Object> config) {
+                    """) Map<String, Object> config) {
         GraphsConfig graphConfig = new GraphsConfig(config);
         DocumentToGraph documentToGraph = new DocumentToGraph(tx, graphConfig);
         Map<Long, List<String>> dups = documentToGraph.validateDocument(document);

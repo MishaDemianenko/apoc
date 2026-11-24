@@ -131,7 +131,8 @@ public class Coll {
                 .collect(Collectors.toList());
     }
 
-    public record ZipToRowsListResult(@Description("A zipped pair.") List<Object> value) {}
+    public record ZipToRowsListResult(
+            @Description("A zipped pair.") List<Object> value) {}
 
     @Procedure("apoc.coll.zipToRows")
     @QueryLanguageScope(scope = {QueryLanguage.CYPHER_5})
@@ -893,7 +894,8 @@ public class Coll {
         }
     }
 
-    public record PartitionListResult(@Description("The partitioned list.") List<Object> value) {}
+    public record PartitionListResult(
+            @Description("The partitioned list.") List<Object> value) {}
 
     @Procedure("apoc.coll.partition")
     @QueryLanguageScope(scope = {QueryLanguage.CYPHER_5})
@@ -945,7 +947,8 @@ public class Coll {
         return partitionList(list, (int) batchSize).collect(Collectors.toList());
     }
 
-    public record SplitListResult(@Description("The split list.") List<Object> value) {}
+    public record SplitListResult(
+            @Description("The split list.") List<Object> value) {}
 
     @Procedure("apoc.coll.split")
     @Description("Splits a collection by the given value.\n"
@@ -1718,8 +1721,7 @@ public class Coll {
     }
 
     @UserFunction("apoc.coll.sortMulti")
-    @Description(
-            """
+    @Description("""
             Sorts the given `LIST<MAP<STRING, ANY>>` by the given fields.
             To indicate that a field should be sorted according to ascending values, prefix it with a caret (^).
             It is also possible to add limits to the `LIST<MAP<STRING, ANY>>` and to skip values.""")
@@ -2000,7 +2002,8 @@ public class Coll {
         return result;
     }
 
-    public record PairWithOffsetListResult(@Description("The created pair.") List<Object> value) {}
+    public record PairWithOffsetListResult(
+            @Description("The created pair.") List<Object> value) {}
 
     @Procedure("apoc.coll.pairWithOffset")
     @QueryLanguageScope(scope = {QueryLanguage.CYPHER_5})
