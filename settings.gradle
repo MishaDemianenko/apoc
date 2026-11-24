@@ -1,3 +1,7 @@
+pluginManagement {
+  includeBuild('gradle/license-plugin-patch')
+}
+
 rootProject.name = 'apoc'
 
 include("processor")

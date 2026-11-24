@@ -1,0 +1,13 @@
+plugins {
+  id 'groovy'
+  id 'java-gradle-plugin'
+}
+
+gradlePlugin {
+  plugins {
+    licensePluginPatch {
+      id = 'apoc.license-plugin-patch'
+      implementationClass = 'apoc.licensepatch.LicensePluginPatch'
+    }
+  }
+}
