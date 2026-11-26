@@ -184,6 +184,7 @@ subprojects {
 
     jvmArgs = [
       "--sun-misc-unsafe-memory-access=allow",
+      "-Djdk.xml.maxElementDepth=0",
       "--add-opens",
       "java.base/java.lang=ALL-UNNAMED",
       "--add-opens",
